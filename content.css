@@ -1,0 +1,92 @@
+/* VAT Calculator Extension Styles */
+
+.vat-price-element {
+  cursor: help !important;
+  border-bottom: 1px dotted #007bff !important;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.vat-price-element:hover {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+}
+
+.vat-tooltip {
+  position: fixed;
+  z-index: 10000;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  max-width: 200px;
+  pointer-events: none;
+  opacity: 0;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.vat-tooltip-content {
+  padding: 12px;
+}
+
+.vat-tooltip-title {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vat-tooltip-price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #28a745;
+  margin-bottom: 6px;
+}
+
+.vat-tooltip-vat {
+  font-size: 12px;
+  color: #666;
+  border-top: 1px solid #eee;
+  padding-top: 6px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .vat-tooltip {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+  
+  .vat-tooltip-title {
+    color: #e2e8f0;
+  }
+  
+  .vat-tooltip-price {
+    color: #68d391;
+  }
+  
+  .vat-tooltip-vat {
+    color: #a0aec0;
+    border-top-color: #4a5568;
+  }
+  
+  .vat-price-element:hover {
+    background-color: rgba(0, 123, 255, 0.2) !important;
+  }
+}
