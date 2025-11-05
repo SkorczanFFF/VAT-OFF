@@ -1,14 +1,14 @@
 /* VAT Calculator Extension Styles */
 
 .vat-price-element {
-  cursor: help !important;
-  border-bottom: 1px dotted #007bff !important;
+  cursor: help;
+  border-bottom: 1px dotted #007bff;
   position: relative;
   transition: background-color 0.2s ease;
 }
 
 .vat-price-element:hover {
-  background-color: rgba(0, 123, 255, 0.1) !important;
+  background-color: rgba(0, 123, 255, 0.1);
 }
 
 .vat-tooltip {
@@ -87,6 +87,6 @@
   }
   
   .vat-price-element:hover {
-    background-color: rgba(0, 123, 255, 0.2) !important;
+    background-color: rgba(0, 123, 255, 0.2);
   }
 }

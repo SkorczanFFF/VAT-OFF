@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "VATonator",
+  "name": "VATopia",
   "version": "1.0.0",
   "description": "Calculate prices without VAT by hovering over price numbers on web pages",
   "permissions": [
@@ -19,7 +19,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "VATonator Settings"
+    "default_title": "VATopia Settings"
   },
   "options_page": "options.html",
   "icons": {

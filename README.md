@@ -1,4 +1,4 @@
-# VATonator Chrome Extension
+# VATopia Chrome Extension
 
 A Chrome extension that automatically detects prices on web pages and displays the price without VAT when you hover over them.
 

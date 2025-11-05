@@ -37,9 +37,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const newEnabled = !result.enabled;
       chrome.storage.sync.set({ enabled: newEnabled }, function() {
         updateStatus(newEnabled);
-        // Notify content script
+        // Notify content script with error handling
         chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-          chrome.tabs.sendMessage(tabs[0].id, { action: 'toggle', enabled: newEnabled });
+          if (tabs && tabs[0] && tabs[0].id) {
+            chrome.tabs.sendMessage(tabs[0].id, { action: 'toggle', enabled: newEnabled }, function(response) {
+              if (chrome.runtime.lastError) {
+                console.debug('VATopia: Could not send message to content script:', chrome.runtime.lastError.message);
+              }
+            });
+          }
         });
       });
     });
@@ -66,13 +72,19 @@ document.addEventListener('DOMContentLoaded', function() {
       vatRate: vatRate,
       customRate: customRate
     }, function() {
-      // Notify content script of settings change
+      // Notify content script of settings change with error handling
       chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { 
-          action: 'settingsChanged', 
-          vatRate: vatRate,
-          customRate: customRate
-        });
+        if (tabs && tabs[0] && tabs[0].id) {
+          chrome.tabs.sendMessage(tabs[0].id, { 
+            action: 'settingsChanged', 
+            vatRate: vatRate,
+            customRate: customRate
+          }, function(response) {
+            if (chrome.runtime.lastError) {
+              console.debug('VATopia: Could not send settings to content script:', chrome.runtime.lastError.message);
+            }
+          });
+        }
       });
     });
   }
