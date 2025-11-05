@@ -1,0 +1,137 @@
+/* VATopia Popup Styles */
+
+.vat-body {
+  width: 280px;
+  padding: 0 !important;
+  font-family: 'Space Grotesk', Arial, sans-serif;
+  background: linear-gradient(270deg, #972b1a, #801834);
+  color: #e4e4e4;
+}
+
+.vat-container {
+  background: #0b0d16; 
+  padding: 8px;
+}
+
+.vat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.vat-header h2 {
+  color: #b1230d;
+  margin: 0;
+}
+
+.vat-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #e4e4e4;
+}
+
+.vat-select {
+  width: 100%;
+  padding: 6px 4px;
+  border: 2px solid #801834;
+  border-radius: 2px;
+  background-color: #e4e4e4;
+  color: #0b0d16;
+}
+
+.vat-select:focus {
+  outline: none;
+  border-color: #801834;
+  box-shadow: 0 0 0 2px rgba(128, 24, 52, 0.25);
+}
+
+.vat-custom-rate {
+  margin-top: 10px;
+}
+
+.vat-input {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #801834;
+  border-radius: 2px;
+  background-color: #e4e4e4;
+  color: #0b0d16;
+  box-sizing: border-box;
+}
+
+.vat-input:focus {
+  outline: none;
+  border-color: #801834;
+  box-shadow: 0 0 0 2px rgba(128, 24, 52, 0.25);
+}
+
+.vat-status {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.vat-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: #00ce30;
+}
+
+.vat-status-enabled {
+  color: #ffffff;
+}
+
+.vat-status-enabled .vat-status-dot {
+  background-color: #28a745;
+  box-shadow: 0 0 6px rgba(40, 167, 69, 0.6);
+}
+
+.vat-status-disabled {
+  color: #dbdbdb;
+}
+
+.vat-status-disabled .vat-status-dot {
+  background-color: #d40000;
+  box-shadow: 0 0 6px rgba(220, 53, 69, 0.6);
+}
+
+.vat-buttons-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.vat-button {
+  padding: 8px 10px;
+  width: 100%;
+  background-color: #801834;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-family: 'Space Grotesk', Arial, sans-serif;
+}
+
+#openOptions {
+  width: 50px;
+  padding-top: 12px;
+}
+
+.vat-button:hover {
+  background-color: #820025;
+}
+
+.vat-button-icon {
+  width: 22px;
+  height: 20px;
+  fill: #ffffff;
+}

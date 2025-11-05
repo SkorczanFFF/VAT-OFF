@@ -2,109 +2,40 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body {
-      width: 300px;
-      padding: 20px;
-      font-family: Arial, sans-serif;
-    }
-    
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    
-    .vat-rate {
-      margin-bottom: 15px;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    
-    select {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    
-    .custom-rate {
-      margin-top: 10px;
-    }
-    
-    input[type="number"] {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    
-    .status {
-      margin-top: 15px;
-      padding: 10px;
-      background-color: #f0f8ff;
-      border-radius: 4px;
-      text-align: center;
-    }
-    
-    .status.enabled {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    
-    .status.disabled {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/popup.css">
 </head>
-<body>
-  <div class="header">
-    <h2>VATopia</h2>
+<body class="vat-body">
+  <div class="vat-container">
+    <div class="vat-header">
+      <h2>VATopia</h2>
+      <div class="vat-status vat-status-disabled" id="status">
+        Extension is disabled<span class="vat-status-dot"></span>
+      </div>
+    </div>
+    <div class="vat-rate">
+      <label class="vat-label" for="vatRate">VAT Rate:</label>
+      <select class="vat-select" id="vatRate">
+        <!-- Options populated dynamically from config.js -->
+      </select>
+    </div>
+    
+    <div class="vat-custom-rate" id="customRateDiv" style="display: none;">
+      <label class="vat-label" for="customRate">Custom VAT Rate (%):</label>
+      <input class="vat-input" type="number" id="customRate" min="0" max="100" step="1" placeholder="eg. 21.3">
+    </div>
+    
+    <div class="vat-buttons-row">
+      <button class="vat-button" id="toggleExtension">Toggle Extension</button>
+      <button class="vat-button" id="openOptions">
+        <img src="icons/settings.svg" alt="Settings" class="vat-button-icon">
+      </button>
+    </div>
   </div>
   
-  <div class="vat-rate">
-    <label for="vatRate">VAT Rate:</label>
-    <select id="vatRate">
-      <option value="23">Poland - 23%</option>
-      <option value="20">UK - 20%</option>
-      <option value="19">Germany - 19%</option>
-      <option value="21">Netherlands - 21%</option>
-      <option value="25">Sweden - 25%</option>
-      <option value="custom">Custom Rate</option>
-    </select>
-  </div>
-  
-  <div class="custom-rate" id="customRateDiv" style="display: none;">
-    <label for="customRate">Custom VAT Rate (%):</label>
-    <input type="number" id="customRate" min="0" max="100" step="0.1" placeholder="Enter VAT rate">
-  </div>
-  
-  <div class="status" id="status">
-    Extension is active
-  </div>
-  
-  <button id="toggleExtension">Toggle Extension</button>
-  <button id="openOptions">Settings</button>
-  
-  <script src="popup.js"></script>
+  <script src="scripts/config.js"></script>
+  <script src="scripts/popup.js"></script>
 </body>
 </html>
