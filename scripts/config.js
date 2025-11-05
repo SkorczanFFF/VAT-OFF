@@ -92,6 +92,35 @@ const VAT_CONFIG = {
       customOption.textContent = 'Custom Rate';
       selectElement.appendChild(customOption);
     }
+  },
+
+  /**
+   * Detects user's locale and maps it to a country code supported by the extension.
+   * Falls back to language-based detection if country code is not in locale string.
+   * @returns {string} Two-letter country code (e.g., 'GB', 'DE', 'PL')
+   */
+  detectDefaultCountryCode() {
+    const locale = navigator.language || navigator.userLanguage || 'en-US';
+    const languageCode = locale.split('-')[0].toLowerCase();
+    const countryCode = locale.split('-')[1]?.toUpperCase();
+    
+    // Use countries array from config instead of hardcoded list
+    const validCountryCodes = this.countries.map(c => c.code);
+    
+    if (countryCode && validCountryCodes.includes(countryCode)) {
+      return countryCode;
+    }
+    
+    // Language to country fallback mapping
+    const languageToCountry = {
+      'de': 'DE', 'ro': 'RO', 'en': 'GB', 'sk': 'SK', 'uk': 'UA',
+      'be': 'BY', 'hu': 'HU', 'bg': 'BG', 'hr': 'HR', 'lt': 'LT',
+      'et': 'EE', 'fr': 'FR', 'nl': 'NL', 'es': 'ES', 'cs': 'CZ',
+      'sl': 'SI', 'lv': 'LV', 'it': 'IT', 'pl': 'PL', 'pt': 'PT',
+      'fi': 'FI', 'ga': 'IE', 'sv': 'SE', 'da': 'DK'
+    };
+    
+    return languageToCountry[languageCode] || 'GB'; // Default to GB (neutral, widely recognized)
   }
 };
 

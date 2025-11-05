@@ -1,28 +1,3 @@
-// Utility function to detect user's locale and map to country code
-function detectDefaultCountryCode() {
-  const locale = navigator.language || navigator.userLanguage || 'en-US';
-  const languageCode = locale.split('-')[0].toLowerCase();
-  const countryCode = locale.split('-')[1]?.toUpperCase();
-  
-  // Direct country code mapping
-  const validCountryCodes = ['DE', 'RO', 'GB', 'SK', 'UA', 'BY', 'HU', 'BG', 'HR', 'LT', 'EE', 'FR', 'NL', 'ES', 'CZ', 'SI', 'LV', 'AT', 'BE', 'IT', 'PL', 'PT', 'FI', 'IE', 'SE', 'DK'];
-  
-  if (countryCode && validCountryCodes.includes(countryCode)) {
-    return countryCode;
-  }
-  
-  // Language to country fallback mapping
-  const languageToCountry = {
-    'de': 'DE', 'ro': 'RO', 'en': 'GB', 'sk': 'SK', 'uk': 'UA',
-    'be': 'BY', 'hu': 'HU', 'bg': 'BG', 'hr': 'HR', 'lt': 'LT',
-    'et': 'EE', 'fr': 'FR', 'nl': 'NL', 'es': 'ES', 'cs': 'CZ',
-    'sl': 'SI', 'lv': 'LV', 'it': 'IT', 'pl': 'PL', 'pt': 'PT',
-    'fi': 'FI', 'ga': 'IE', 'sv': 'SE', 'da': 'DK'
-  };
-  
-  return languageToCountry[languageCode] || 'GB'; // Default to GB (neutral, widely recognized)
-}
-
 document.addEventListener('DOMContentLoaded', function() {
   const vatRateSelect = document.getElementById('vatRate');
   const customRateDiv = document.getElementById('customRateDiv');
@@ -128,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get country code from selected option
     const selectedOption = vatRateSelect.querySelector(`option[value="${vatRateSelect.value}"]`);
-    const countryCode = selectedOption ? selectedOption.dataset.country : detectDefaultCountryCode();
+    const countryCode = selectedOption ? selectedOption.dataset.country : VAT_CONFIG.detectDefaultCountryCode();
 
     const settings = {
       vatRate: vatRateSelect.value,

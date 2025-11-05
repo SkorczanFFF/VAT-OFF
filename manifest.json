@@ -7,14 +7,12 @@
     "storage",
     "activeTab"
   ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["scripts/content.js"],
-      "css": ["styles/content.css"]
+      "css": ["styles/content.css"],
+      "run_at": "document_idle"
     }
   ],
   "action": {
@@ -26,5 +24,8 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }

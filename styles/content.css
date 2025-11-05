@@ -1,32 +1,63 @@
 /* VATopia Extension Styles */
 
+/* Fix 6.2 - CSS Variables for all colors */
+:root {
+  --vat-primary: #801834;
+  --vat-primary-light: rgba(128, 24, 52, 0.1);
+  --vat-secondary: #992210;
+  --vat-background-dark: #001a25;
+  --vat-background-darker: #0b0d16;
+  --vat-border: #161616;
+  --vat-text-light: #e4e4e4;
+  --vat-text-lighter: #f1f1f1;
+  --vat-text-muted: #cfcfcf;
+}
+
 .vat-price-element {
   cursor: help;
-  border-bottom: 1px dotted #801834;
+  border-bottom: 1px dotted var(--vat-primary);
   position: relative;
   transition: background-color 0.2s ease;
 }
 
 .vat-price-element:hover {
-  background-color: rgba(128, 24, 52, 0.1);
+  background-color: var(--vat-primary-light);
 }
 
 .vat-price-container {
   cursor: help;
-  border-bottom: 1px dotted #801834;
+  border-bottom: 1px dotted var(--vat-primary);
   position: relative;
   transition: background-color 0.2s ease;
 }
 
 .vat-price-container:hover {
-  background-color: rgba(128, 24, 52, 0.1);
+  background-color: var(--vat-primary-light);
+}
+
+/* Fix 6.1 - CSS classes for enabled/disabled states */
+.vat-price-element.vat-enabled,
+.vat-price-container.vat-enabled {
+  cursor: help;
+  border-bottom: 1px dotted var(--vat-primary);
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+.vat-price-element.vat-disabled,
+.vat-price-container.vat-disabled {
+  cursor: default;
+  border-bottom: none;
+  text-decoration: none;
+  background-color: transparent;
+  pointer-events: none;
 }
 
 .vat-tooltip {
   position: fixed;
   z-index: 10000;
-  background: #001a25;
-  border: 1px solid #161616;
+  background: var(--vat-background-dark);
+  border: 1px solid var(--vat-border);
   border-radius: 2px;
   box-shadow: 0 4px 12px rgba(22, 22, 22, 0.5);
   font-family: 'Space Grotesk', Arial, sans-serif;
@@ -35,8 +66,13 @@
   max-width: 200px;
   pointer-events: none;
   opacity: 0;
-  animation: fadeIn 0.2s ease forwards;
-  color: #e4e4e4;
+  animation: vatFadeIn 0.2s ease forwards;
+  color: var(--vat-text-light);
+}
+
+/* Fix 6.3 - Add fade-out animation class */
+.vat-tooltip.vat-hiding {
+  animation: vatFadeOut 0.15s ease forwards;
 }
 
 .vat-tooltip-content {
@@ -45,7 +81,7 @@
 
 .vat-tooltip-title {
   font-weight: bold;
-  color: #cfcfcf;
+  color: var(--vat-text-muted);
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -54,18 +90,36 @@
 .vat-tooltip-price {
   font-size: 20px;
   font-weight: 700;
-  color: #992210;
+  color: var(--vat-secondary);
   margin-bottom: 2px;
 }
 
 .vat-tooltip-vat {
   font-size: 12px;
-  color: #f1f1f1;
-  border-top: 1px solid #161616;
+  color: var(--vat-text-lighter);
+  border-top: 1px solid var(--vat-border);
   padding-top: 6px;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Fix 6.3 - Animations for tooltip */
+@keyframes vatFadeIn {
+  from { 
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vatFadeOut {
+  from { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to { 
+    opacity: 0;
+    transform: translateY(-5px);
+  }
 }

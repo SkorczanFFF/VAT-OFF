@@ -1,15 +1,37 @@
 /* VATopia Popup Styles */
 
+/* Fix 6.2 - CSS Variables for all colors */
+:root {
+  --vat-primary: #801834;
+  --vat-primary-light: rgba(128, 24, 52, 0.1);
+  --vat-primary-focus: rgba(128, 24, 52, 0.25);
+  --vat-primary-hover: #820025;
+  --vat-secondary: #992210;
+  --vat-gradient-start: #972b1a;
+  --vat-gradient-end: #801834;
+  --vat-background-dark: #001a25;
+  --vat-background-darker: #0b0d16;
+  --vat-background-darkest: #161616;
+  --vat-text-light: #e4e4e4;
+  --vat-text-lighter: #ffffff;
+  --vat-text-gray: #dbdbdb;
+  --vat-header-text: #b1230d;
+  --vat-success: #28a745;
+  --vat-success-glow: rgba(40, 167, 69, 0.6);
+  --vat-error: #d40000;
+  --vat-error-glow: rgba(220, 53, 69, 0.6);
+}
+
 .vat-body {
   width: 280px;
   padding: 0 !important;
   font-family: 'Space Grotesk', Arial, sans-serif;
-  background: linear-gradient(270deg, #972b1a, #801834);
-  color: #e4e4e4;
+  background: linear-gradient(270deg, var(--vat-gradient-start), var(--vat-gradient-end));
+  color: var(--vat-text-light);
 }
 
 .vat-container {
-  background: #0b0d16; 
+  background: var(--vat-background-darker); 
   padding: 8px;
 }
 
@@ -21,7 +43,7 @@
 }
 
 .vat-header h2 {
-  color: #b1230d;
+  color: var(--vat-header-text);
   margin: 0;
 }
 
@@ -29,22 +51,22 @@
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
-  color: #e4e4e4;
+  color: var(--vat-text-light);
 }
 
 .vat-select {
   width: 100%;
   padding: 6px 4px;
-  border: 2px solid #801834;
+  border: 2px solid var(--vat-primary);
   border-radius: 2px;
-  background-color: #e4e4e4;
-  color: #0b0d16;
+  background-color: var(--vat-text-light);
+  color: var(--vat-background-darker);
 }
 
 .vat-select:focus {
   outline: none;
-  border-color: #801834;
-  box-shadow: 0 0 0 2px rgba(128, 24, 52, 0.25);
+  border-color: var(--vat-primary);
+  box-shadow: 0 0 0 2px var(--vat-primary-focus);
 }
 
 .vat-custom-rate {
@@ -54,17 +76,17 @@
 .vat-input {
   width: 100%;
   padding: 8px;
-  border: 2px solid #801834;
+  border: 2px solid var(--vat-primary);
   border-radius: 2px;
-  background-color: #e4e4e4;
-  color: #0b0d16;
+  background-color: var(--vat-text-light);
+  color: var(--vat-background-darker);
   box-sizing: border-box;
 }
 
 .vat-input:focus {
   outline: none;
-  border-color: #801834;
-  box-shadow: 0 0 0 2px rgba(128, 24, 52, 0.25);
+  border-color: var(--vat-primary);
+  box-shadow: 0 0 0 2px var(--vat-primary-focus);
 }
 
 .vat-status {
@@ -82,25 +104,25 @@
   height: 12px;
   border-radius: 50%;
   display: inline-block;
-  background-color: #00ce30;
+  background-color: var(--vat-success);
 }
 
 .vat-status-enabled {
-  color: #ffffff;
+  color: var(--vat-text-lighter);
 }
 
 .vat-status-enabled .vat-status-dot {
-  background-color: #28a745;
-  box-shadow: 0 0 6px rgba(40, 167, 69, 0.6);
+  background-color: var(--vat-success);
+  box-shadow: 0 0 6px var(--vat-success-glow);
 }
 
 .vat-status-disabled {
-  color: #dbdbdb;
+  color: var(--vat-text-gray);
 }
 
 .vat-status-disabled .vat-status-dot {
-  background-color: #d40000;
-  box-shadow: 0 0 6px rgba(220, 53, 69, 0.6);
+  background-color: var(--vat-error);
+  box-shadow: 0 0 6px var(--vat-error-glow);
 }
 
 .vat-buttons-row {
@@ -112,8 +134,8 @@
 .vat-button {
   padding: 8px 10px;
   width: 100%;
-  background-color: #801834;
-  color: #ffffff;
+  background-color: var(--vat-primary);
+  color: var(--vat-text-lighter);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -127,11 +149,11 @@
 }
 
 .vat-button:hover {
-  background-color: #820025;
+  background-color: var(--vat-primary-hover);
 }
 
 .vat-button-icon {
   width: 22px;
   height: 20px;
-  fill: #ffffff;
+  fill: var(--vat-text-lighter);
 }
