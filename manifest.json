@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "VATopia",
+  "name": "VAT-OFF",
   "version": "1.0.0",
   "description": "Calculate prices without VAT by hovering over price numbers on web pages",
   "permissions": [
@@ -10,14 +10,14 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["scripts/content.js"],
-      "css": ["styles/content.css"],
+      "js": ["scripts/error-handler.js", "scripts/content.js"],
+      "css": ["styles/variables.css", "styles/content.css"],
       "run_at": "document_idle"
     }
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "VATopia Settings"
+    "default_title": "VAT-OFF Settings"
   },
   "options_page": "options.html",
   "icons": {

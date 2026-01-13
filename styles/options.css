@@ -1,24 +1,3 @@
-/* VATopia Options Styles */
-
-/* Fix 6.2 - CSS Variables for all colors */
-:root {
-  --vat-primary: #801834;
-  --vat-primary-light: rgba(128, 24, 52, 0.1);
-  --vat-primary-medium: rgba(128, 24, 52, 0.2);
-  --vat-primary-focus: rgba(128, 24, 52, 0.25);
-  --vat-primary-hover: #820025;
-  --vat-secondary: #992210;
-  --vat-secondary-light: rgba(153, 34, 16, 0.2);
-  --vat-background-dark: #001a25;
-  --vat-background-darker: #0b0d16;
-  --vat-background-darker-alpha: rgba(11, 13, 22, 0.5);
-  --vat-background-darkest: #161616;
-  --vat-background-darkest-alpha: rgba(22, 22, 22, 0.5);
-  --vat-text-light: #e4e4e4;
-  --vat-text-lighter: #ffffff;
-  --vat-text-disabled: #666;
-}
-
 .options-body {
   font-family: 'Space Grotesk', Arial, sans-serif;
   max-width: 600px;

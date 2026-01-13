@@ -5,12 +5,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/variables.css">
   <link rel="stylesheet" href="styles/popup.css">
 </head>
 <body class="vat-body">
   <div class="vat-container">
     <div class="vat-header">
-      <h2>VATopia</h2>
+      <h2>VAT-OFF</h2>
       <div class="vat-status vat-status-disabled" id="status">
         Extension is disabled<span class="vat-status-dot"></span>
       </div>
@@ -24,7 +25,7 @@
     
     <div class="vat-custom-rate" id="customRateDiv" style="display: none;">
       <label class="vat-label" for="customRate">Custom VAT Rate (%):</label>
-      <input class="vat-input" type="number" id="customRate" min="0" max="100" step="1" placeholder="eg. 21.3">
+      <input class="vat-input" type="number" id="customRate" min="0" max="100" step="1" placeholder="e.g., 15 or 23">
     </div>
     
     <div class="vat-buttons-row">
@@ -35,7 +36,9 @@
     </div>
   </div>
   
+  <script src="scripts/error-handler.js"></script>
   <script src="scripts/config.js"></script>
+  <script src="scripts/settings.js"></script>
   <script src="scripts/popup.js"></script>
 </body>
 </html>

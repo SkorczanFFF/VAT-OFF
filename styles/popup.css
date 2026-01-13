@@ -1,27 +1,3 @@
-/* VATopia Popup Styles */
-
-/* Fix 6.2 - CSS Variables for all colors */
-:root {
-  --vat-primary: #801834;
-  --vat-primary-light: rgba(128, 24, 52, 0.1);
-  --vat-primary-focus: rgba(128, 24, 52, 0.25);
-  --vat-primary-hover: #820025;
-  --vat-secondary: #992210;
-  --vat-gradient-start: #972b1a;
-  --vat-gradient-end: #801834;
-  --vat-background-dark: #001a25;
-  --vat-background-darker: #0b0d16;
-  --vat-background-darkest: #161616;
-  --vat-text-light: #e4e4e4;
-  --vat-text-lighter: #ffffff;
-  --vat-text-gray: #dbdbdb;
-  --vat-header-text: #b1230d;
-  --vat-success: #28a745;
-  --vat-success-glow: rgba(40, 167, 69, 0.6);
-  --vat-error: #d40000;
-  --vat-error-glow: rgba(220, 53, 69, 0.6);
-}
-
 .vat-body {
   width: 280px;
   padding: 0 !important;

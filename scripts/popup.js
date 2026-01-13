@@ -6,13 +6,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const toggleButton = document.getElementById('toggleExtension');
   const openOptionsButton = document.getElementById('openOptions');
 
-  // Populate VAT rate dropdown from config
-  VAT_CONFIG.populateSelect(vatRateSelect, true);
+  SettingsManager.populateSelect(vatRateSelect);
 
-  // Cache enabled state to avoid unnecessary storage reads (Fix 3.2)
   let cachedEnabledState = false;
+  let saveTimeout = null;
 
-  // Fix 7.3 - Add user-facing error messages
   function showError(message) {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'vat-error-message';
@@ -22,10 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => errorDiv.remove(), 5000);
   }
 
-  // Load saved settings
-  chrome.storage.sync.get(['vatRate', 'customRate', 'enabled', 'countryCode'], function(result) {
-    if (chrome.runtime.lastError) {
-      console.error('VATopia: Storage error loading settings:', chrome.runtime.lastError);
+  SettingsManager.loadSettings(['vatRate', 'customRate', 'enabled', 'countryCode'], (result, error) => {
+    if (error) {
       showError('Failed to load settings. Please try again.');
       return;
     }
@@ -37,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
       customRateInput.value = result.customRate;
     }
     if (result.countryCode) {
-      // Set the country code for the selected option
       const selectedOption = vatRateSelect.querySelector(`option[value="${result.vatRate}"]`);
       if (selectedOption && selectedOption.dataset.country) {
         selectedOption.dataset.country = result.countryCode;
@@ -47,42 +42,50 @@ document.addEventListener('DOMContentLoaded', function() {
       cachedEnabledState = result.enabled;
       updateStatus(result.enabled);
     } else {
-      // Default to disabled state if no stored value
       cachedEnabledState = false;
       updateStatus(false);
     }
     updateCustomRateVisibility();
   });
 
-  // Handle VAT rate selection
   vatRateSelect.addEventListener('change', function() {
     updateCustomRateVisibility();
     saveSettings();
   });
 
-  // Handle custom rate input
   customRateInput.addEventListener('input', function() {
-    validateCustomRate();
-    saveSettings();
+    const validation = SettingsManager.validateVATRate(customRateInput.value);
+    if (!validation.valid) {
+      customRateInput.style.borderColor = '#d40000';
+      customRateInput.title = validation.error;
+    } else {
+      customRateInput.style.borderColor = '#801834';
+      customRateInput.title = '';
+    }
+    
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
+    
+    saveTimeout = setTimeout(() => {
+      saveSettings();
+    }, 500);
   });
 
-  // Toggle extension (Fix 3.2 - use cached state instead of fetching again)
   toggleButton.addEventListener('click', function() {
     const newEnabled = !cachedEnabledState;
     chrome.storage.sync.set({ enabled: newEnabled }, function() {
       if (chrome.runtime.lastError) {
-        console.error('VATopia: Storage error saving enabled state:', chrome.runtime.lastError);
+        ErrorHandler.storage('Failed to save enabled state', chrome.runtime.lastError);
         showError('Failed to save settings. Please try again.');
         return;
       }
       
       cachedEnabledState = newEnabled;
       updateStatus(newEnabled);
-      // Note: Content scripts will be notified automatically via chrome.storage.onChanged
     });
   });
 
-  // Open options page
   openOptionsButton.addEventListener('click', function() {
     chrome.runtime.openOptionsPage();
   });
@@ -95,44 +98,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Fix 3.3 - Use shared validation function from config
-  function validateCustomRate() {
-    const validation = VAT_CONFIG.validateCustomRate(customRateInput.value);
-    if (!validation.valid) {
-      customRateInput.style.borderColor = '#d40000';
-      customRateInput.title = validation.error;
-    } else {
-      customRateInput.style.borderColor = '#801834';
-      customRateInput.title = '';
-    }
-  }
-
   function saveSettings() {
     const vatRate = vatRateSelect.value;
     const customRate = customRateInput.value;
-    const selectedOption = vatRateSelect.querySelector(`option[value="${vatRate}"]`);
-    const countryCode = selectedOption ? selectedOption.dataset.country : VAT_CONFIG.detectDefaultCountryCode();
+    const countryCode = SettingsManager.getCountryCode(vatRateSelect);
     
-    // Validate custom rate before saving (Fix 3.3 - use shared validation)
-    if (vatRate === 'custom') {
-      const validation = VAT_CONFIG.validateCustomRate(customRate);
-      if (!validation.valid) {
-        console.error('VATopia: ' + validation.error);
-        return;
-      }
+    const prepared = SettingsManager.prepareSettingsForSave(vatRate, customRate, countryCode);
+    
+    if (prepared.error) {
+      ErrorHandler.validation('Invalid custom VAT rate', { error: prepared.error });
+      showError(prepared.error);
+      return;
     }
     
-    chrome.storage.sync.set({
-      vatRate: vatRate,
-      customRate: customRate,
-      countryCode: countryCode
-    }, function() {
-      if (chrome.runtime.lastError) {
-        console.error('VATopia: Storage error saving settings:', chrome.runtime.lastError);
+    if (prepared.sanitizedCustomRate !== customRate) {
+      customRateInput.value = prepared.sanitizedCustomRate;
+    }
+    
+    SettingsManager.saveSettings(prepared.settings, (error) => {
+      if (error) {
         showError('Failed to save settings. Please try again.');
-        return;
       }
-      // Note: Content scripts will be notified automatically via chrome.storage.onChanged
     });
   }
 

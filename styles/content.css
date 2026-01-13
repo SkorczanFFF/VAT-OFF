@@ -1,18 +1,3 @@
-/* VATopia Extension Styles */
-
-/* Fix 6.2 - CSS Variables for all colors */
-:root {
-  --vat-primary: #801834;
-  --vat-primary-light: rgba(128, 24, 52, 0.1);
-  --vat-secondary: #992210;
-  --vat-background-dark: #001a25;
-  --vat-background-darker: #0b0d16;
-  --vat-border: #161616;
-  --vat-text-light: #e4e4e4;
-  --vat-text-lighter: #f1f1f1;
-  --vat-text-muted: #cfcfcf;
-}
-
 .vat-price-element {
   cursor: help;
   border-bottom: 1px dotted var(--vat-primary);
@@ -35,7 +20,7 @@
   background-color: var(--vat-primary-light);
 }
 
-/* Fix 6.1 - CSS classes for enabled/disabled states */
+/* CSS classes for enabled/disabled states */
 .vat-price-element.vat-enabled,
 .vat-price-container.vat-enabled {
   cursor: help;
@@ -70,7 +55,7 @@
   color: var(--vat-text-light);
 }
 
-/* Fix 6.3 - Add fade-out animation class */
+/* Fade-out animation class */
 .vat-tooltip.vat-hiding {
   animation: vatFadeOut 0.15s ease forwards;
 }
@@ -101,7 +86,6 @@
   padding-top: 6px;
 }
 
-/* Fix 6.3 - Animations for tooltip */
 @keyframes vatFadeIn {
   from { 
     opacity: 0;

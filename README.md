@@ -1,4 +1,4 @@
-# VATopia Chrome Extension
+# VAT-OFF Chrome Extension
 
 A Chrome extension that automatically detects prices on web pages and displays the price without VAT when you hover over them.
 
@@ -19,7 +19,7 @@ A Chrome extension that automatically detects prices on web pages and displays t
 1. Download or clone this repository
 2. Open Chrome and go to `chrome://extensions/`
 3. Enable "Developer mode" in the top right corner
-4. Click "Load unpacked" and select the `vatonator-extension` folder
+4. Click "Load unpacked" and select the `vat-off-extension` folder
 5. The extension should now appear in your extensions list
 
 ### Usage
@@ -106,7 +106,7 @@ The extension recognizes various price formats:
 
 ### File Structure
 ```
-vatonator-extension/
+vat-off-extension/
 ├── manifest.json          # Extension configuration
 ├── popup.html            # Extension popup UI
 ├── popup.js              # Popup functionality

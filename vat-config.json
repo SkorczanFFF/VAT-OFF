@@ -1,4 +1,4 @@
-const VAT_CONFIG = {
+{
   "countries": [
     { "code": "DE", "name": "Germany", "rate": 19, "currency": "€" },
     { "code": "RO", "name": "Romania", "rate": 19, "currency": "lei" },
@@ -52,6 +52,19 @@ const VAT_CONFIG = {
     "ga": "IE",
     "sv": "SE",
     "da": "DK"
+  },
+  "currencyPatterns": {
+    "zł": ["zł", "PLN"],
+    "€": ["€", "EUR"],
+    "$": ["$", "USD"],
+    "£": ["£", "GBP"],
+    "kr": ["kr", "SEK", "DKK", "NOK"],
+    "Kč": ["Kč", "CZK"],
+    "₴": ["₴", "UAH"],
+    "Br": ["Br", "BYN"],
+    "Ft": ["Ft", "HUF"],
+    "lei": ["lei", "RON"],
+    "лв": ["лв", "BGN"],
+    "kn": ["kn", "HRK"]
   }
-};
-
+}

@@ -6,36 +6,40 @@ document.addEventListener('DOMContentLoaded', function() {
   const saveButton = document.getElementById('saveButton');
   const statusDiv = document.getElementById('status');
   
-  // Behavior checkboxes
   const autoDetect = document.getElementById('autoDetect');
   const watchChanges = document.getElementById('watchChanges');
   const showVATBreakdown = document.getElementById('showVATBreakdown');
+  
+  let previewTimeout = null;
 
-  // Populate VAT rate dropdown from config
-  VAT_CONFIG.populateSelect(vatRateSelect, true);
-
-  // Load saved settings
+  SettingsManager.populateSelect(vatRateSelect);
   loadSettings();
 
-  // Event listeners
   vatRateSelect.addEventListener('change', updateCustomRateVisibility);
-  customRateInput.addEventListener('input', updatePreview);
+  
+  customRateInput.addEventListener('input', function() {
+    if (previewTimeout) {
+      clearTimeout(previewTimeout);
+    }
+    previewTimeout = setTimeout(updatePreview, 300);
+  });
+  
   vatRateSelect.addEventListener('change', updatePreview);
-  customRateInput.addEventListener('change', updatePreview);
+  customRateInput.addEventListener('change', function() {
+    if (previewTimeout) {
+      clearTimeout(previewTimeout);
+      previewTimeout = null;
+    }
+    updatePreview();
+  });
   
   saveButton.addEventListener('click', saveSettings);
 
   function loadSettings() {
-    chrome.storage.sync.get([
-      'vatRate', 
-      'customRate',
-      'countryCode',
-      'autoDetect',
-      'watchChanges',
-      'showVATBreakdown'
-    ], function(result) {
-      if (chrome.runtime.lastError) {
-        console.error('VATopia: Storage error loading settings:', chrome.runtime.lastError);
+    const keys = ['vatRate', 'customRate', 'countryCode', 'autoDetect', 'watchChanges', 'showVATBreakdown'];
+    
+    SettingsManager.loadSettings(keys, (result, error) => {
+      if (error) {
         showStatus('Failed to load settings', 'error');
         return;
       }
@@ -71,12 +75,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function updatePreview() {
     const vatRate = vatRateSelect.value === 'custom' ? 
-      parseFloat(customRateInput.value) || 23 : 
-      parseFloat(vatRateSelect.value);
+      parseInt(customRateInput.value, 10) || 23 : 
+      parseInt(vatRateSelect.value, 10);
     
-    // Validate custom rate (Fix 3.3 - use shared validation)
     if (vatRateSelect.value === 'custom') {
-      const validation = VAT_CONFIG.validateCustomRate(customRateInput.value);
+      const validation = SettingsManager.validateVATRate(customRateInput.value);
       if (!validation.valid) {
         previewPrice.textContent = 'Invalid rate';
         previewPrice.style.color = '#d40000';
@@ -92,37 +95,34 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function saveSettings() {
-    // Validate custom rate before saving (Fix 3.3 - use shared validation)
-    if (vatRateSelect.value === 'custom') {
-      const validation = VAT_CONFIG.validateCustomRate(customRateInput.value);
-      if (!validation.valid) {
-        showStatus(validation.error, 'error');
-        return;
-      }
-    }
+    const vatRate = vatRateSelect.value;
+    const customRate = customRateInput.value;
+    const countryCode = SettingsManager.getCountryCode(vatRateSelect);
 
-    // Get country code from selected option
-    const selectedOption = vatRateSelect.querySelector(`option[value="${vatRateSelect.value}"]`);
-    const countryCode = selectedOption ? selectedOption.dataset.country : VAT_CONFIG.detectDefaultCountryCode();
-
-    const settings = {
-      vatRate: vatRateSelect.value,
-      customRate: customRateInput.value,
-      countryCode: countryCode,
+    const additionalSettings = {
       autoDetect: autoDetect.checked,
       watchChanges: watchChanges.checked,
       showVATBreakdown: showVATBreakdown.checked
     };
 
-    chrome.storage.sync.set(settings, function() {
-      if (chrome.runtime.lastError) {
-        console.error('VATopia: Storage error saving settings:', chrome.runtime.lastError);
+    const prepared = SettingsManager.prepareSettingsForSave(vatRate, customRate, countryCode, additionalSettings);
+    
+    if (prepared.error) {
+      showStatus(prepared.error, 'error');
+      return;
+    }
+
+    if (prepared.sanitizedCustomRate !== customRate) {
+      customRateInput.value = prepared.sanitizedCustomRate;
+    }
+
+    SettingsManager.saveSettings(prepared.settings, (error) => {
+      if (error) {
         showStatus('Failed to save settings', 'error');
         return;
       }
       
       showStatus('Settings saved successfully!', 'success');
-      // Note: Content scripts will be notified automatically via chrome.storage.onChanged
     });
   }
 
