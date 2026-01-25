@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+  const vatRegionSelect = document.getElementById('vatRegion');
   const vatRateSelect = document.getElementById('vatRate');
   const customRateDiv = document.getElementById('customRateDiv');
   const customRateInput = document.getElementById('customRate');
@@ -13,15 +14,33 @@ document.addEventListener('DOMContentLoaded', function() {
   
   let previewTimeout = null;
 
-  SettingsManager.populateSelect(vatRateSelect);
+  SettingsManager.populateRegionSelect(vatRegionSelect);
+  
+  const defaultRegion = SettingsManager.detectDefaultRegion();
+  vatRegionSelect.value = defaultRegion;
+  SettingsManager.populateCountrySelect(vatRateSelect, defaultRegion);
+  
   loadSettings();
 
+  vatRegionSelect.addEventListener('change', handleRegionChange);
   vatRateSelect.addEventListener('change', handleVatRateChange);
   customRateInput.addEventListener('input', handleCustomRateInput);
   customRateInput.addEventListener('change', handleCustomRateChange);
   customCurrencyInput.addEventListener('input', updatePreview);
   showVatBreakdownCheckbox.addEventListener('change', updatePreview);
   saveBtn.addEventListener('click', handleSaveClick);
+  function handleRegionChange() {
+    const regionId = vatRegionSelect.value;
+    SettingsManager.populateCountrySelect(vatRateSelect, regionId);
+    
+    if (vatRateSelect.options.length > 0) {
+      vatRateSelect.value = vatRateSelect.options[0].value;
+    }
+    
+    updateCustomRateVisibility();
+    updatePreview();
+  }
+
   function handleVatRateChange() {
     updateCustomRateVisibility();
     updatePreview();
@@ -95,12 +114,21 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function loadSettings() {
-    const keys = ['vatRate', 'customRate', 'customCurrency', 'countryCode', 'watchChanges', 'showVATBreakdown'];
+    const keys = ['vatRegion', 'vatRate', 'customRate', 'customCurrency', 'countryCode', 'watchChanges', 'showVATBreakdown'];
     
     SettingsManager.loadSettings(keys, (result, error) => {
       if (error) {
         showStatus('Failed to load settings', 'error');
         return;
+      }
+      
+      if (result.vatRegion) {
+        vatRegionSelect.value = result.vatRegion;
+        SettingsManager.populateCountrySelect(vatRateSelect, result.vatRegion);
+      } else {
+        const defaultRegion = SettingsManager.detectDefaultRegion();
+        vatRegionSelect.value = defaultRegion;
+        SettingsManager.populateCountrySelect(vatRateSelect, defaultRegion);
       }
       
       if (result.vatRate) {
@@ -125,12 +153,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function saveSettings() {
+    const vatRegion = vatRegionSelect.value;
     const vatRate = vatRateSelect.value;
     const customRate = customRateInput.value;
     const customCurrency = customCurrencyInput.value.trim().substring(0, 4);
     const countryCode = SettingsManager.getCountryCode(vatRateSelect);
 
     const additionalSettings = {
+      vatRegion: vatRegion,
       watchChanges: watchChangesCheckbox.checked,
       showVATBreakdown: showVatBreakdownCheckbox.checked,
       customCurrency: customCurrency

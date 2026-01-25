@@ -1,6 +1,6 @@
 
 .vat-page--popup {
-  width: 280px;
+  width: 375px;
   font-family: 'Space Grotesk', Arial, sans-serif;
   background: linear-gradient(270deg, var(--vat-secondary), var(--vat-primary));
   color: var(--vat-text);
@@ -28,6 +28,42 @@
   margin-bottom: 10px;
 }
 
+.vat-rate-selectors {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.vat-rate-selectors .vat-region-wrapper,
+.vat-rate-selectors .vat-country-wrapper {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.vat-rate-selectors .vat-region-wrapper {
+  flex: 0 0 auto;
+  width: 95px;
+}
+
+.vat-rate-selectors .vat-label {
+  font-size: 11px;
+  margin-bottom: 3px;
+  display: block;
+}
+
+.vat-region-select {
+  width: 100%;
+}
+
+.vat-country-select {
+  width: 100%;
+}
+
+.vat-rate .vat-form-control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .vat-page--popup .vat-button {
   padding: 6px 10px;
   width: 100%;
@@ -35,7 +71,7 @@
 
 .vat-button--save-custom {
   margin-top: 8px;
-  padding: 8px;
+  padding: 12px;
 }
 
 .vat-status-indicator {

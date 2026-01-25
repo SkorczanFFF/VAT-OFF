@@ -1,13 +1,72 @@
 const SettingsManager = {
-  populateSelect(selectElement, includeCustom = true) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG) return;
+  populateRegionSelect(selectElement, useShortcuts = false) {
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return;
     
     selectElement.innerHTML = '';
     
-    VAT_CONFIG.countries.forEach(country => {
+    const shortcuts = {
+      'eu': 'EU',
+      'europe-other': 'Other EU',
+      'asia': 'Asia',
+      'americas': 'Americas',
+      'africa': 'Africa',
+      'middle-east': 'M. East',
+      'oceania': 'Oceania'
+    };
+    
+    VAT_CONFIG.regions.forEach(region => {
+      const option = document.createElement('option');
+      option.value = region.id;
+      option.textContent = useShortcuts && shortcuts[region.id] ? shortcuts[region.id] : region.name;
+      selectElement.appendChild(option);
+    });
+  },
+
+  detectDefaultRegion() {
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return 'eu';
+    
+    const locale = navigator.language || navigator.userLanguage || 'en-US';
+    const countryCode = locale.split('-')[1]?.toUpperCase();
+    
+    if (countryCode) {
+      const regionId = this.getRegionByCountryCode(countryCode);
+      if (regionId) {
+        return regionId;
+      }
+    }
+    
+    const languageCode = locale.split('-')[0].toLowerCase();
+    const mappedCountry = VAT_CONFIG.languageToCountry[languageCode];
+    if (mappedCountry) {
+      const regionId = this.getRegionByCountryCode(mappedCountry);
+      if (regionId) {
+        return regionId;
+      }
+    }
+    
+    return 'eu';
+  },
+
+  populateCountrySelect(selectElement, regionId, includeCustom = true) {
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return;
+    
+    selectElement.innerHTML = '';
+    
+    if (!regionId) {
+      selectElement.disabled = true;
+      return;
+    }
+    
+    const region = VAT_CONFIG.regions.find(r => r.id === regionId);
+    if (!region) {
+      selectElement.disabled = true;
+      return;
+    }
+    
+    region.countries.forEach(country => {
       const option = document.createElement('option');
       option.value = country.code;
-      option.textContent = `${country.name} - ${country.rate}%`;
+      option.textContent = `${country.name} - ${country.currency} - ${country.rate}%`;
       selectElement.appendChild(option);
     });
     
@@ -17,6 +76,20 @@ const SettingsManager = {
       customOption.textContent = 'Custom Rate';
       selectElement.appendChild(customOption);
     }
+    
+    selectElement.disabled = false;
+  },
+
+  getRegionByCountryCode(countryCode) {
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions || !countryCode) return null;
+    
+    for (const region of VAT_CONFIG.regions) {
+      const country = region.countries.find(c => c.code === countryCode);
+      if (country) {
+        return region.id;
+      }
+    }
+    return null;
   },
 
   validateVATRate(rateValue) {
@@ -48,13 +121,19 @@ const SettingsManager = {
   },
 
   detectDefaultCountryCode() {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG) return 'GB';
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return 'GB';
     
     const locale = navigator.language || navigator.userLanguage || 'en-US';
     const languageCode = locale.split('-')[0].toLowerCase();
     const countryCode = locale.split('-')[1]?.toUpperCase();
     
-    const validCountryCodes = VAT_CONFIG.countries.map(c => c.code);
+    const validCountryCodes = [];
+    VAT_CONFIG.regions.forEach(region => {
+      region.countries.forEach(country => {
+        validCountryCodes.push(country.code);
+      });
+    });
+    
     if (countryCode && validCountryCodes.includes(countryCode)) {
       return countryCode;
     }
@@ -71,15 +150,27 @@ const SettingsManager = {
   },
 
   getRate(countryCode) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !countryCode) return 20;
-    const country = VAT_CONFIG.countries.find(c => c.code === countryCode);
-    return country ? country.rate : 20;
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions || !countryCode) return 20;
+    
+    for (const region of VAT_CONFIG.regions) {
+      const country = region.countries.find(c => c.code === countryCode);
+      if (country) {
+        return country.rate;
+      }
+    }
+    return 20;
   },
 
   getCurrency(countryCode) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !countryCode) return '€';
-    const country = VAT_CONFIG.countries.find(c => c.code === countryCode);
-    return country ? country.currency : '€';
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions || !countryCode) return '€';
+    
+    for (const region of VAT_CONFIG.regions) {
+      const country = region.countries.find(c => c.code === countryCode);
+      if (country) {
+        return country.currency;
+      }
+    }
+    return '€';
   },
 
   loadSettings(keys, callback) {

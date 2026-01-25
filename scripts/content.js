@@ -722,9 +722,15 @@ class VATCalculator {
   }
 
   getCurrencyByCountryCode(countryCode) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !countryCode) return '€';
-    const country = VAT_CONFIG.countries.find(c => c.code === countryCode);
-    return country ? country.currency : '€';
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions || !countryCode) return '€';
+    
+    for (const region of VAT_CONFIG.regions) {
+      const country = region.countries.find(c => c.code === countryCode);
+      if (country) {
+        return country.currency;
+      }
+    }
+    return '€';
   }
 
   detectCountryCode() {
@@ -732,9 +738,15 @@ class VATCalculator {
     const languageCode = locale.split('-')[0].toLowerCase();
     const countryCode = locale.split('-')[1]?.toUpperCase();
     
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG) return 'GB';
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return 'GB';
     
-    const validCountryCodes = VAT_CONFIG.countries.map(c => c.code);
+    const validCountryCodes = [];
+    VAT_CONFIG.regions.forEach(region => {
+      region.countries.forEach(country => {
+        validCountryCodes.push(country.code);
+      });
+    });
+    
     if (countryCode && validCountryCodes.includes(countryCode)) {
       return countryCode;
     }

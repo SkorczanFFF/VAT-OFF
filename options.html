@@ -12,65 +12,76 @@
 </head>
 <body class="vat-page--options">
   <div class="vat-container--options">
-    <h1 class="vat-title">VAT-OFF Settings</h1>
-    
-    <div class="vat-section">
-      <h2 class="vat-section-title">VAT Rate Configuration</h2>
+    <div class="vat-container-wrapper">
+      <h1 class="vat-title">VAT-OFF Settings</h1>
       
-      <div class="vat-form-group">
-        <label class="vat-label" for="vatRate">Default VAT Rate:</label>
-        <select class="vat-form-control" id="vatRate">
-        </select>
-        <div class="vat-help-text">Select the default VAT rate for your country or choose custom.</div>
-      </div>
-      
-      <div class="vat-custom-rate" id="customRateDiv" style="display: none;">
-        <label class="vat-label">Custom VAT Rate:</label>
-        <div class="custom-rate-row">
-          <input class="vat-form-control custom-rate-input" type="number" id="customRate" min="1" max="100" step="1" placeholder="e.g., 23">
-          <span class="custom-rate-percent">%</span>
-          <input class="vat-form-control custom-currency-input" type="text" id="customCurrency" maxlength="4" placeholder="€">
+      <div class="vat-section">
+        <h2 class="vat-section-title">VAT Rate Configuration</h2>
+        
+        <div class="vat-form-group">
+          <div class="vat-region-country-row">
+            <div class="vat-region-wrapper">
+              <label class="vat-label" for="vatRegion">Region:</label>
+              <select class="vat-form-control" id="vatRegion">
+              </select>
+            </div>
+            <div class="vat-country-wrapper">
+              <label class="vat-label" for="vatRate">Country:</label>
+              <select class="vat-form-control" id="vatRate" disabled>
+              </select>
+            </div>
+          </div>
+          <div class="vat-help-text">Select a region to see available countries, then choose your country.</div>
         </div>
-        <div class="vat-help-text">Enter VAT rate (1-100%) and currency symbol (max 4 chars).</div>
-      </div>
-      
-      <div class="vat-preview" id="preview">
-        <div class="vat-preview-label">Tooltip Preview</div>
-        <div class="vat-preview-scene">
-          <span class="vat-preview-price" id="previewOriginalPrice">199,99 zł</span>
-          <div class="vat-preview-tooltip">
-            <div class="preview-tooltip-content">
-              <div class="preview-tooltip-title">Without VAT</div>
-              <div class="preview-tooltip-price" id="previewPrice">162.60 zł</div>
-              <div class="preview-tooltip-vat" id="previewVatLine">VAT 23%: 37.39 zł</div>
+        
+        <div class="vat-custom-rate" id="customRateDiv" style="display: none;">
+          <label class="vat-label">Custom VAT Rate:</label>
+          <div class="custom-rate-row">
+            <input class="vat-form-control custom-rate-input" type="number" id="customRate" min="1" max="100" step="1" placeholder="e.g., 23">
+            <span class="custom-rate-percent">%</span>
+            <input class="vat-form-control custom-currency-input" type="text" id="customCurrency" maxlength="4" placeholder="€">
+          </div>
+          <div class="vat-help-text">Enter VAT rate (1-100%) and currency symbol (max 4 chars).</div>
+        </div>
+        
+        <div class="vat-preview" id="preview">
+          <div class="vat-preview-label">Tooltip Preview</div>
+          <div class="vat-preview-scene">
+            <span class="vat-preview-price" id="previewOriginalPrice">199,99 zł</span>
+            <div class="vat-preview-tooltip">
+              <div class="preview-tooltip-content">
+                <div class="preview-tooltip-title">Without VAT</div>
+                <div class="preview-tooltip-price" id="previewPrice">162.60 zł</div>
+                <div class="preview-tooltip-vat" id="previewVatLine">VAT 23%: 37.39 zł</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    
-    <div class="vat-section">
-      <h2 class="vat-section-title">Extension Behavior</h2>
       
-      <div class="vat-form-group">
-        <label class="vat-label">
-          <input class="vat-checkbox" type="checkbox" id="watchChanges" checked>
-          Watch for dynamic content changes
-        </label>
-        <div class="vat-help-text" style="padding-left: 24px;">Monitor the page for new content and scan for additional prices.</div>
+      <div class="vat-section">
+        <h2 class="vat-section-title">Extension Behavior</h2>
+        
+        <div class="vat-form-group">
+          <label class="vat-label">
+            <input class="vat-checkbox" type="checkbox" id="watchChanges" checked>
+            Watch for dynamic content changes
+          </label>
+          <div class="vat-help-text" style="padding-left: 24px;">Monitor the page for new content and scan for additional prices.</div>
+        </div>
+        
+        <div class="vat-form-group">
+          <label class="vat-label">
+            <input class="vat-checkbox" type="checkbox" id="showVATBreakdown" checked>
+            Show VAT breakdown in tooltip
+          </label>
+          <div class="vat-help-text" style="padding-left: 24px;">Display the VAT amount in the hover tooltip.</div>
+        </div>
       </div>
       
-      <div class="vat-form-group">
-        <label class="vat-label">
-          <input class="vat-checkbox" type="checkbox" id="showVATBreakdown" checked>
-          Show VAT breakdown in tooltip
-        </label>
-        <div class="vat-help-text" style="padding-left: 24px;">Display the VAT amount in the hover tooltip.</div>
-      </div>
+      <button class="vat-button--save" id="saveButton">SAVE SETTINGS</button>
+      <div class="vat-status" id="status" style="display: none;"></div>
     </div>
-    
-    <button class="vat-button--save" id="saveButton">SAVE SETTINGS</button>
-    <div class="vat-status" id="status" style="display: none;"></div>
   </div>
 
   <footer>&copy; 2026 by <a href="https://github.com/SkorczanFFF" target="_blank">SkorczanFFF</a></footer>

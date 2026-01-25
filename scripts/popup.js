@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+  const vatRegionSelect = document.getElementById('vatRegion');
   const vatRateSelect = document.getElementById('vatRate');
   const customRateDiv = document.getElementById('customRateDiv');
   const customRateInput = document.getElementById('customRate');
@@ -12,14 +13,35 @@ document.addEventListener('DOMContentLoaded', function() {
   let isEnabled = false;
   let saveTimeout = null;
 
-  SettingsManager.populateSelect(vatRateSelect);
+  SettingsManager.populateRegionSelect(vatRegionSelect, true);
+  
+  vatRegionSelect.value = 'eu';
+  SettingsManager.populateCountrySelect(vatRateSelect, 'eu');
+  
+  if (vatRateSelect.options.length > 0) {
+    vatRateSelect.value = vatRateSelect.options[0].value;
+  }
+  
   loadSettings();
 
+  vatRegionSelect.addEventListener('change', handleRegionChange);
   vatRateSelect.addEventListener('change', handleVatRateChange);
   customRateInput.addEventListener('input', handleCustomRateInput);
   toggleBtn.addEventListener('click', handleToggleClick);
   optionsBtn.addEventListener('click', handleOptionsClick);
   saveCustomRateBtn.addEventListener('click', handleSaveCustomRateClick);
+  function handleRegionChange() {
+    const regionId = vatRegionSelect.value;
+    SettingsManager.populateCountrySelect(vatRateSelect, regionId);
+    
+    if (vatRateSelect.options.length > 0) {
+      vatRateSelect.value = vatRateSelect.options[0].value;
+    }
+    
+    updateCustomRateVisibility();
+    saveSettings();
+  }
+
   function handleVatRateChange() {
     updateCustomRateVisibility();
     saveSettings();
@@ -103,14 +125,24 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function loadSettings() {
-    SettingsManager.loadSettings(['vatRate', 'customRate', 'customCurrency', 'enabled'], (result, error) => {
+    SettingsManager.loadSettings(['vatRegion', 'vatRate', 'customRate', 'customCurrency', 'enabled'], (result, error) => {
       if (error) {
         showError('Failed to load settings. Please try again.');
         return;
       }
       
+      if (result.vatRegion) {
+        vatRegionSelect.value = result.vatRegion;
+        SettingsManager.populateCountrySelect(vatRateSelect, result.vatRegion);
+      } else {
+        vatRegionSelect.value = 'eu';
+        SettingsManager.populateCountrySelect(vatRateSelect, 'eu');
+      }
+      
       if (result.vatRate) {
         vatRateSelect.value = result.vatRate;
+      } else if (vatRateSelect.options.length > 0) {
+        vatRateSelect.value = vatRateSelect.options[0].value;
       }
       if (result.customRate) {
         customRateInput.value = result.customRate;
@@ -130,12 +162,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function saveSettings(showSuccessMessage) {
+    const vatRegion = vatRegionSelect.value;
     const vatRate = vatRateSelect.value;
     const customRate = customRateInput.value;
     const customCurrency = customCurrencyInput.value.trim().substring(0, 4);
     const countryCode = SettingsManager.getCountryCode(vatRateSelect);
     
-    const prepared = SettingsManager.prepareSettingsForSave(vatRate, customRate, countryCode, { customCurrency: customCurrency });
+    const prepared = SettingsManager.prepareSettingsForSave(vatRate, customRate, countryCode, { 
+      vatRegion: vatRegion,
+      customCurrency: customCurrency 
+    });
     
     if (prepared.error) {
       showError(prepared.error);

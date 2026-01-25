@@ -10,8 +10,14 @@
 
 .vat-container--options {
   background: var(--vat-midnight);
-  padding: 20px;
+  padding: 4px;
   box-shadow: 0 2px 10px rgba(11, 13, 22, 0.5);
+  background: linear-gradient(270deg, var(--vat-secondary), var(--vat-primary));
+}
+
+.vat-container-wrapper {
+  background: var(--vat-midnight);
+  padding: 20px;
 }
 
 .vat-title {
@@ -33,6 +39,38 @@
 
 .vat-form-group {
   margin-bottom: 10px;
+}
+
+.vat-form-group .vat-form-control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vat-region-country-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.vat-region-wrapper {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.vat-country-wrapper {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.vat-region-wrapper .vat-label,
+.vat-country-wrapper .vat-label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.vat-region-wrapper .vat-form-control,
+.vat-country-wrapper .vat-form-control {
+  width: 100%;
 }
 
 .vat-button--save {
@@ -83,11 +121,6 @@
   border: 1px solid var(--vat-error);
 }
 
-.vat-preview {
-  margin-top: 15px;
-  background-color: rgba(11, 13, 22, 0.5);
-  border: 1px solid rgba(11, 13, 22, 0.8);
-}
 
 .vat-preview-label {
   font-size: 16px;
