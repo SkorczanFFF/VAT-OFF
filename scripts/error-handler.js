@@ -17,67 +17,85 @@ const ErrorHandler = {
   },
 
   log(severity, type, message, details = null) {
-    const timestamp = new Date().toISOString();
+    if (!severity || !type || !message) {
+      console.error('[VAT-OFF] [ERROR] [runtime] Invalid error handler call', { severity, type, message });
+      return;
+    }
+
     const prefix = 'VAT-OFF';
-    const formattedMessage = `[${prefix}] [${severity.toUpperCase()}] [${type}] ${message}`;
+    const severityUpper = String(severity).toUpperCase();
+    
+    // Format details as readable string
+    let detailsStr = '';
+    if (details) {
+      try {
+        if (details instanceof Error) {
+          detailsStr = ` | ${details.message}`;
+        } else if (typeof details === 'object') {
+          detailsStr = ` | ${JSON.stringify(details)}`;
+        } else {
+          detailsStr = ` | ${details}`;
+        }
+      } catch (e) {
+        detailsStr = ' | [unserializable]';
+      }
+    }
+    
+    const formattedMessage = `[${prefix}] [${severityUpper}] [${type}] ${message}${detailsStr}`;
 
     switch (severity) {
       case this.Severity.DEBUG:
+        // DEBUG messages are suppressed in production - they don't log at all
+        // This prevents noise in chrome://extensions error page
+        break;
+
       case this.Severity.INFO:
-        if (details) {
-          console.log(formattedMessage, details);
-        } else {
-          console.log(formattedMessage);
-        }
+        console.log(formattedMessage);
         break;
 
       case this.Severity.WARN:
-        if (details) {
-          console.warn(formattedMessage, details);
-        } else {
-          console.warn(formattedMessage);
-        }
+        console.warn(formattedMessage);
         break;
 
       case this.Severity.ERROR:
       case this.Severity.CRITICAL:
-        if (details) {
-          console.error(formattedMessage, details);
-        } else {
-          console.error(formattedMessage);
-        }
+        console.error(formattedMessage);
         break;
 
       default:
-        console.log(formattedMessage, details);
+        console.log(formattedMessage);
     }
   },
 
   storage(message, details = null) {
-    this.log(this.Severity.ERROR, this.ErrorType.STORAGE, message, details);
+    ErrorHandler.log(ErrorHandler.Severity.ERROR, ErrorHandler.ErrorType.STORAGE, message, details);
   },
 
   dom(message, details = null) {
-    this.log(this.Severity.WARN, this.ErrorType.DOM, message, details);
+    ErrorHandler.log(ErrorHandler.Severity.WARN, ErrorHandler.ErrorType.DOM, message, details);
+  },
+
+  domDebug(message, details = null) {
+    ErrorHandler.log(ErrorHandler.Severity.DEBUG, ErrorHandler.ErrorType.DOM, message, details);
   },
 
   parsing(message, details = null) {
-    this.log(this.Severity.WARN, this.ErrorType.PARSING, message, details);
+    ErrorHandler.log(ErrorHandler.Severity.WARN, ErrorHandler.ErrorType.PARSING, message, details);
   },
 
   validation(message, details = null) {
-    this.log(this.Severity.ERROR, this.ErrorType.VALIDATION, message, details);
+    ErrorHandler.log(ErrorHandler.Severity.ERROR, ErrorHandler.ErrorType.VALIDATION, message, details);
   },
 
   performance(message, details = null) {
-    this.log(this.Severity.WARN, this.ErrorType.PERFORMANCE, message, details);
+    ErrorHandler.log(ErrorHandler.Severity.WARN, ErrorHandler.ErrorType.PERFORMANCE, message, details);
   },
 
   runtime(message, details = null) {
-    this.log(this.Severity.ERROR, this.ErrorType.RUNTIME, message, details);
+    ErrorHandler.log(ErrorHandler.Severity.ERROR, ErrorHandler.ErrorType.RUNTIME, message, details);
   },
 
   critical(message, details = null) {
-    this.log(this.Severity.CRITICAL, this.ErrorType.RUNTIME, message, details);
+    ErrorHandler.log(ErrorHandler.Severity.CRITICAL, ErrorHandler.ErrorType.RUNTIME, message, details);
   }
 };

@@ -33,7 +33,18 @@ class VATCalculator {
     this.init();
   }
 
+  injectFont() {
+    // Inject Google Fonts link for Space Grotesk (CSS @import doesn't work reliably in content scripts)
+    if (!document.querySelector('link[href*="Space+Grotesk"]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap';
+      document.head.appendChild(link);
+    }
+  }
+
   init() {
+    this.injectFont();
     this.loadSettings();
     
     chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -203,9 +214,14 @@ class VATCalculator {
 
     try {
       const pricePatterns = [
+        // Pattern 1: Numbers followed by currency symbols
         /(\d{1,3}(?:[\s,.]\d{3}){0,4}(?:[.,]\d{2})?)\s*(?:zł|PLN|€|EUR|\$|USD|£|GBP|kr|Kč|lei|лв|₴|Br|Ft|kn)/gi,
+        // Pattern 2: Price labels followed by numbers
         /(?:price|cost|amount|total|sum|cena|preis|prix|precio|prezzo|valor):\s*(\d{1,3}(?:[\s,.]\d{3}){0,4}(?:[.,]\d{2})?)/gi,
-        /(\d{1,3}(?:[\s,.]\d{3}){1,4}(?:[.,]\d{2})?|\d{4,7}(?:[.,]\d{2}))/g
+        // Pattern 3: Standalone price-like numbers
+        // Added (?![\d]) to prevent matching partial numbers (e.g., "9 595" from "9 5950")
+        // Added (?![a-zA-Z]) to prevent matching model numbers (e.g., "5950X")
+        /(\d{1,3}(?:[\s,.]\d{3}){1,4}(?:[.,]\d{2})?(?![\da-zA-Z])|\d{4,7}(?:[.,]\d{2})(?![\da-zA-Z]))/g
       ];
 
       const walker = document.createTreeWalker(
@@ -322,6 +338,16 @@ class VATCalculator {
       'qty', 'quantity', 'ilość', 'szt', 'pcs', 'pieces', 'units'
     ];
     
+    // Product/model name keywords - numbers near these are likely model numbers, not prices
+    const productKeywords = [
+      'ryzen', 'intel', 'core', 'xeon', 'celeron', 'pentium', 'athlon',
+      'geforce', 'radeon', 'nvidia', 'amd', 'gtx', 'rtx', 'rx',
+      'iphone', 'galaxy', 'pixel', 'oneplus', 'xiaomi', 'redmi',
+      'model', 'serie', 'series', 'gen', 'generation',
+      'ddr', 'ssd', 'hdd', 'nvme', 'pcie', 'usb', 'hdmi',
+      'thread', 'ripper', 'threadripper', 'epyc'
+    ];
+    
     const priceIndex = context.indexOf(priceLower);
     if (priceIndex !== -1) {
       const contextBefore = context.substring(Math.max(0, priceIndex - 100), priceIndex);
@@ -330,6 +356,13 @@ class VATCalculator {
       
       for (const fp of falsePositives) {
         if (surroundingContext.includes(fp)) {
+          return false;
+        }
+      }
+      
+      // Check for product/model keywords
+      for (const pk of productKeywords) {
+        if (surroundingContext.includes(pk)) {
           return false;
         }
       }
@@ -348,6 +381,34 @@ class VATCalculator {
     if (/\bv?\d+\.\d+(?:\.\d+)?\b/i.test(contextWindow) && 
         !(/price|cost|€|\$|£|zł/i.test(contextWindow))) return false;
     if (/build\s*\d+/i.test(contextWindow)) return false;
+    
+    // Check if price text is immediately followed by letters (model number pattern)
+    // e.g., "5950X", "3090Ti", "i7-12700K"
+    const afterPriceIndex = priceStartIndex + priceText.length;
+    if (afterPriceIndex < text.length) {
+      const charAfter = text.charAt(afterPriceIndex);
+      // If immediately followed by a letter, it's likely a model number
+      if (/[a-zA-Z]/.test(charAfter)) {
+        return false;
+      }
+    }
+    
+    // Check if price text is immediately preceded by a letter (model number pattern)
+    // e.g., "i5-12400", "RX 7900"
+    if (priceStartIndex > 0) {
+      const charBefore = text.charAt(priceStartIndex - 1);
+      // If immediately preceded by a letter (not a space or punctuation), it's likely a model number
+      if (/[a-zA-Z]/.test(charBefore)) {
+        return false;
+      }
+    }
+    
+    // Check for alphanumeric model number pattern in context
+    // Matches patterns like "i7-12700K", "RTX 3090", "RX 7900 XTX"
+    if (/\b[a-zA-Z]{1,4}\d+[a-zA-Z]*\b/.test(contextWindow) && 
+        !(/price|cost|€|\$|£|zł|cena/i.test(contextWindow))) {
+      return false;
+    }
     
     return true;
   }
@@ -462,6 +523,12 @@ class VATCalculator {
         return;
       }
 
+      // Verify it's actually a text node
+      if (textNode.nodeType !== Node.TEXT_NODE) {
+        ErrorHandler.dom('Node is not a text node', { nodeType: textNode.nodeType });
+        return;
+      }
+
       const parent = textNode.parentNode;
       
       if (!parent || !document.contains(parent)) {
@@ -469,14 +536,29 @@ class VATCalculator {
         return;
       }
       
-      const text = textNode.textContent;
+      // Get current text content - it might have changed since the match was found
+      // Use nodeValue for text nodes (more efficient and correct)
+      const text = textNode.nodeValue || textNode.textContent || '';
       
-      if (!text || text.length < startIndex + length) {
-        ErrorHandler.dom('Invalid text content or indices');
+      // Validate indices are within bounds
+      if (!text || startIndex < 0 || length <= 0 || startIndex + length > text.length) {
+        // This is expected on dynamic sites - text node was modified between scan and element creation
+        // Use DEBUG level to avoid noise in console
+        ErrorHandler.domDebug('Text node modified since scan, skipping', {
+          textLength: text ? text.length : 0,
+          startIndex,
+          length
+        });
         return;
       }
       
       const priceText = text.substring(startIndex, startIndex + length);
+      
+      // Verify the extracted text looks like a price (sanity check)
+      if (!priceText || priceText.trim().length === 0) {
+        ErrorHandler.dom('Extracted price text is empty');
+        return;
+      }
       
       const existingElements = parent.querySelectorAll('[data-vat-price="' + price + '"]');
       for (let elem of existingElements) {
@@ -573,7 +655,7 @@ class VATCalculator {
       const vatDiv = document.createElement('div');
       vatDiv.className = 'vat-tooltip-vat';
       const vatAmount = (price - priceWithoutVAT).toFixed(2);
-      vatDiv.textContent = `VAT ${this.vatRate}%: ${vatAmount}`;
+      vatDiv.textContent = `VAT ${this.vatRate}%: ${vatAmount} ${currency}`;
       content.appendChild(vatDiv);
     }
     
@@ -646,7 +728,7 @@ class VATCalculator {
   }
 
   getCurrencyByCountryCode(countryCode) {
-    if (!VAT_CONFIG || !countryCode) return '€';
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !countryCode) return '€';
     const country = VAT_CONFIG.countries.find(c => c.code === countryCode);
     return country ? country.currency : '€';
   }
@@ -656,7 +738,7 @@ class VATCalculator {
     const languageCode = locale.split('-')[0].toLowerCase();
     const countryCode = locale.split('-')[1]?.toUpperCase();
     
-    if (!VAT_CONFIG) return 'GB';
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG) return 'GB';
     
     const validCountryCodes = VAT_CONFIG.countries.map(c => c.code);
     if (countryCode && validCountryCodes.includes(countryCode)) {

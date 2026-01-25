@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const autoDetect = document.getElementById('autoDetect');
   const watchChanges = document.getElementById('watchChanges');
   const showVATBreakdown = document.getElementById('showVATBreakdown');
+  const previewVatLine = document.getElementById('previewVatLine');
+  const previewOriginalPrice = document.getElementById('previewOriginalPrice');
   
   let previewTimeout = null;
 
@@ -32,6 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     updatePreview();
   });
+  
+  showVATBreakdown.addEventListener('change', updatePreview);
   
   saveButton.addEventListener('click', saveSettings);
 
@@ -78,20 +82,30 @@ document.addEventListener('DOMContentLoaded', function() {
       parseInt(customRateInput.value, 10) || 23 : 
       parseInt(vatRateSelect.value, 10);
     
+    // Get currency based on selected country
+    const countryCode = SettingsManager.getCountryCode(vatRateSelect);
+    const currency = SettingsManager.getCurrency(countryCode);
+    
     if (vatRateSelect.value === 'custom') {
       const validation = SettingsManager.validateVATRate(customRateInput.value);
       if (!validation.valid) {
-        previewPrice.textContent = 'Invalid rate';
-        previewPrice.style.color = '#d40000';
+        previewPrice.textContent = '-- ' + currency;
+        previewVatLine.textContent = 'Invalid rate';
         return;
       }
     }
     
-    const priceWithVAT = 100;
+    const priceWithVAT = 199.99;
     const priceWithoutVAT = priceWithVAT / (1 + vatRate / 100);
+    const vatAmount = priceWithVAT - priceWithoutVAT;
     
-    previewPrice.textContent = priceWithoutVAT.toFixed(2);
-    previewPrice.style.color = '#992210';
+    // Update preview with correct currency
+    previewOriginalPrice.textContent = priceWithVAT.toFixed(2) + ' ' + currency;
+    previewPrice.textContent = priceWithoutVAT.toFixed(2) + ' ' + currency;
+    previewVatLine.textContent = `VAT ${vatRate}%: ${vatAmount.toFixed(2)} ${currency}`;
+    
+    // Show/hide VAT breakdown based on checkbox
+    previewVatLine.style.display = showVATBreakdown.checked ? 'block' : 'none';
   }
 
   function saveSettings() {
@@ -133,6 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setTimeout(function() {
       statusDiv.style.display = 'none';
-    }, 3000);
+    }, 5000);
   }
 });

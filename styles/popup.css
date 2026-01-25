@@ -1,13 +1,12 @@
 .vat-body {
   width: 280px;
-  padding: 0 !important;
   font-family: 'Space Grotesk', Arial, sans-serif;
-  background: linear-gradient(270deg, var(--vat-gradient-start), var(--vat-gradient-end));
-  color: var(--vat-text-light);
+  background: linear-gradient(270deg, var(--vat-secondary), var(--vat-primary));
+  color: var(--vat-text);
 }
 
 .vat-container {
-  background: var(--vat-background-darker); 
+  background: var(--vat-midnight); 
   padding: 8px;
 }
 
@@ -19,50 +18,24 @@
 }
 
 .vat-header h2 {
-  color: var(--vat-header-text);
+  color: var(--vat-secondary);
   margin: 0;
+  filter: brightness(1.1)
 }
 
 .vat-label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
-  color: var(--vat-text-light);
+  color: var(--vat-text);
 }
 
-.vat-select {
-  width: 100%;
-  padding: 6px 4px;
-  border: 2px solid var(--vat-primary);
-  border-radius: 2px;
-  background-color: var(--vat-text-light);
-  color: var(--vat-background-darker);
-}
-
-.vat-select:focus {
-  outline: none;
-  border-color: var(--vat-primary);
-  box-shadow: 0 0 0 2px var(--vat-primary-focus);
+.vat-rate {
+  margin-bottom: 10px;
 }
 
 .vat-custom-rate {
   margin-top: 10px;
-}
-
-.vat-input {
-  width: 100%;
-  padding: 8px;
-  border: 2px solid var(--vat-primary);
-  border-radius: 2px;
-  background-color: var(--vat-text-light);
-  color: var(--vat-background-darker);
-  box-sizing: border-box;
-}
-
-.vat-input:focus {
-  outline: none;
-  border-color: var(--vat-primary);
-  box-shadow: 0 0 0 2px var(--vat-primary-focus);
 }
 
 .vat-status {
@@ -78,27 +51,27 @@
 .vat-status-dot {
   width: 12px;
   height: 12px;
-  border-radius: 50%;
   display: inline-block;
   background-color: var(--vat-success);
+  border-radius: 2px;
 }
 
 .vat-status-enabled {
-  color: var(--vat-text-lighter);
+  color: #fff;
 }
 
 .vat-status-enabled .vat-status-dot {
   background-color: var(--vat-success);
-  box-shadow: 0 0 6px var(--vat-success-glow);
+  box-shadow: 0 0 6px rgba(40, 167, 69, 0.6);
 }
 
 .vat-status-disabled {
-  color: var(--vat-text-gray);
+  color: var(--vat-text);
 }
 
 .vat-status-disabled .vat-status-dot {
   background-color: var(--vat-error);
-  box-shadow: 0 0 6px var(--vat-error-glow);
+  box-shadow: 0 0 6px rgba(220, 53, 69, 0.6);
 }
 
 .vat-buttons-row {
@@ -111,12 +84,11 @@
   padding: 8px 10px;
   width: 100%;
   background-color: var(--vat-primary);
-  color: var(--vat-text-lighter);
+  color: #fff;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  font-family: 'Space Grotesk', Arial, sans-serif;
+  transition: filter 0.2s ease;
+  font-family: inherit;
 }
 
 #openOptions {
@@ -125,11 +97,11 @@
 }
 
 .vat-button:hover {
-  background-color: var(--vat-primary-hover);
+  filter: brightness(1.15);
 }
 
 .vat-button-icon {
   width: 22px;
   height: 20px;
-  fill: var(--vat-text-lighter);
+  fill: #fff;
 }

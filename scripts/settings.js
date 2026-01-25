@@ -1,6 +1,6 @@
 const SettingsManager = {
   populateSelect(selectElement, includeCustom = true) {
-    if (!VAT_CONFIG) return;
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG) return;
     
     selectElement.innerHTML = '';
     
@@ -49,7 +49,7 @@ const SettingsManager = {
   },
 
   detectDefaultCountryCode() {
-    if (!VAT_CONFIG) return 'GB';
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG) return 'GB';
     
     const locale = navigator.language || navigator.userLanguage || 'en-US';
     const languageCode = locale.split('-')[0].toLowerCase();
@@ -64,8 +64,15 @@ const SettingsManager = {
   },
 
   getCountryCode(selectElement) {
-    const selectedOption = selectElement.querySelector(`option[value="${selectElement.value}"]`);
+    // Use selectedOptions[0] to get the actually selected option, not just the first with matching value
+    const selectedOption = selectElement.selectedOptions[0];
     return selectedOption ? selectedOption.dataset.country : this.detectDefaultCountryCode();
+  },
+
+  getCurrency(countryCode) {
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !countryCode) return '€';
+    const country = VAT_CONFIG.countries.find(c => c.code === countryCode);
+    return country ? country.currency : '€';
   },
 
   loadSettings(keys, callback) {

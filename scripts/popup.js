@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'vat-error-message';
     errorDiv.textContent = message;
-    errorDiv.style.cssText = 'background: rgba(220,53,69,0.2); color: #fff; padding: 8px; margin: 8px 0; border-radius: 4px; border: 1px solid #d40000; font-size: 12px;';
+    errorDiv.style.cssText = 'background: rgba(220,53,69,0.2); color: #fff; padding: 8px; margin: 8px 0; border: 1px solid #d40000; font-size: 12px;';
     statusDiv.parentNode.insertBefore(errorDiv, statusDiv);
     setTimeout(() => errorDiv.remove(), 5000);
   }
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const prepared = SettingsManager.prepareSettingsForSave(vatRate, customRate, countryCode);
     
     if (prepared.error) {
-      ErrorHandler.validation('Invalid custom VAT rate', { error: prepared.error });
+      // Don't log validation errors to console - they're expected user input issues
       showError(prepared.error);
       return;
     }

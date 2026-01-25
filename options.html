@@ -18,7 +18,7 @@
       
       <div class="options-form-group">
         <label class="options-label" for="vatRate">Default VAT Rate:</label>
-        <select class="options-select" id="vatRate">
+        <select class="vat-form-control" id="vatRate">
           <!-- Options populated dynamically from config.js -->
         </select>
         <div class="options-help-text">Select the default VAT rate for your country or choose custom.</div>
@@ -26,12 +26,22 @@
       
       <div class="options-custom-rate" id="customRateDiv" style="display: none;">
         <label class="options-label" for="customRate">Custom VAT Rate (%):</label>
-        <input class="options-input" type="number" id="customRate" min="0" max="100" step="1" placeholder="e.g., 15 or 23">
+        <input class="vat-form-control" type="number" id="customRate" min="0" max="100" step="1" placeholder="e.g., 15 or 23">
         <div class="options-help-text">Enter a whole number VAT rate between 0% and 100%.</div>
       </div>
       
       <div class="options-preview" id="preview">
-        <strong>Preview:</strong> Price 100.00 → Without VAT: <span id="previewPrice">81.30</span>
+        <div class="preview-label">Tooltip Preview</div>
+        <div class="preview-scene">
+          <span class="preview-price-text" id="previewOriginalPrice">199,99 zł</span>
+          <div class="preview-tooltip">
+            <div class="preview-tooltip-content">
+              <div class="preview-tooltip-title">Without VAT</div>
+              <div class="preview-tooltip-price" id="previewPrice">162.60 zł</div>
+              <div class="preview-tooltip-vat" id="previewVatLine">VAT 23%: 37.39 zł</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -66,6 +76,8 @@
     <button class="options-save-button" id="saveButton">Save Settings</button>
     <div class="options-status" id="status" style="display: none;"></div>
   </div>
+
+  <footer>&copy; 2026 by <a href="https://github.com/SkorczanFFF" target="_blank">SkorczanFFF</a></footer>
   
   <script src="scripts/error-handler.js"></script>
   <script src="scripts/config.js"></script>

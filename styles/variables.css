@@ -1,27 +1,37 @@
 :root {
+  /* Core brand colors */
   --vat-primary: #801834;
-  --vat-primary-light: rgba(128, 24, 52, 0.1);
-  --vat-primary-medium: rgba(128, 24, 52, 0.2);
-  --vat-primary-focus: rgba(128, 24, 52, 0.25);
-  --vat-primary-hover: #820025;
   --vat-secondary: #992210;
-  --vat-secondary-light: rgba(153, 34, 16, 0.2);
-  --vat-gradient-start: #972b1a;
-  --vat-gradient-end: #801834;
-  --vat-background-dark: #001a25;
-  --vat-background-darker: #0b0d16;
-  --vat-background-darker-alpha: rgba(11, 13, 22, 0.5);
-  --vat-background-darkest: #161616;
-  --vat-background-darkest-alpha: rgba(22, 22, 22, 0.5);
-  --vat-border: #161616;
-  --vat-text-light: #e4e4e4;
-  --vat-text-lighter: #ffffff;
-  --vat-text-muted: #cfcfcf;
-  --vat-text-gray: #dbdbdb;
+  --vat-stellar: #001A25;
+  --vat-midnight: #0b0d16;
+
+  /* Text */
+  --vat-text: #f5f5f5;
   --vat-text-disabled: #666;
-  --vat-header-text: #b1230d;
+
+  /* Status */
   --vat-success: #28a745;
-  --vat-success-glow: rgba(40, 167, 69, 0.6);
   --vat-error: #d40000;
-  --vat-error-glow: rgba(220, 53, 69, 0.6);
+}
+
+/* Shared form element styles */
+.vat-form-control {
+  width: 100%;
+  padding: 6px 8px;
+  border: 2px solid var(--vat-primary);
+  background-color: var(--vat-stellar);
+  color: var(--vat-text);
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+select.vat-form-control {
+  padding: 6px 4px;
+}
+
+.vat-form-control:focus {
+  outline: none;
+  border-color: var(--vat-primary);
+  box-shadow: 0 0 0 2px rgba(128, 24, 52, 0.25);
 }
