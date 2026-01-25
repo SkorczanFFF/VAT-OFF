@@ -7,34 +7,38 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/variables.css">
+  <link rel="stylesheet" href="styles/components.css">
   <link rel="stylesheet" href="styles/options.css">
 </head>
-<body class="options-body">
-  <div class="options-container">
-    <h1 class="options-title">VAT-OFF Settings</h1>
+<body class="vat-page--options">
+  <div class="vat-container--options">
+    <h1 class="vat-title">VAT-OFF Settings</h1>
     
-    <div class="options-section">
-      <h2 class="options-section-title">VAT Rate Configuration</h2>
+    <div class="vat-section">
+      <h2 class="vat-section-title">VAT Rate Configuration</h2>
       
-      <div class="options-form-group">
-        <label class="options-label" for="vatRate">Default VAT Rate:</label>
+      <div class="vat-form-group">
+        <label class="vat-label" for="vatRate">Default VAT Rate:</label>
         <select class="vat-form-control" id="vatRate">
-          <!-- Options populated dynamically from config.js -->
         </select>
-        <div class="options-help-text">Select the default VAT rate for your country or choose custom.</div>
+        <div class="vat-help-text">Select the default VAT rate for your country or choose custom.</div>
       </div>
       
-      <div class="options-custom-rate" id="customRateDiv" style="display: none;">
-        <label class="options-label" for="customRate">Custom VAT Rate (%):</label>
-        <input class="vat-form-control" type="number" id="customRate" min="0" max="100" step="1" placeholder="e.g., 15 or 23">
-        <div class="options-help-text">Enter a whole number VAT rate between 0% and 100%.</div>
+      <div class="vat-custom-rate" id="customRateDiv" style="display: none;">
+        <label class="vat-label">Custom VAT Rate:</label>
+        <div class="custom-rate-row">
+          <input class="vat-form-control custom-rate-input" type="number" id="customRate" min="1" max="100" step="1" placeholder="e.g., 23">
+          <span class="custom-rate-percent">%</span>
+          <input class="vat-form-control custom-currency-input" type="text" id="customCurrency" maxlength="4" placeholder="€">
+        </div>
+        <div class="vat-help-text">Enter VAT rate (1-100%) and currency symbol (max 4 chars).</div>
       </div>
       
-      <div class="options-preview" id="preview">
-        <div class="preview-label">Tooltip Preview</div>
-        <div class="preview-scene">
-          <span class="preview-price-text" id="previewOriginalPrice">199,99 zł</span>
-          <div class="preview-tooltip">
+      <div class="vat-preview" id="preview">
+        <div class="vat-preview-label">Tooltip Preview</div>
+        <div class="vat-preview-scene">
+          <span class="vat-preview-price" id="previewOriginalPrice">199,99 zł</span>
+          <div class="vat-preview-tooltip">
             <div class="preview-tooltip-content">
               <div class="preview-tooltip-title">Without VAT</div>
               <div class="preview-tooltip-price" id="previewPrice">162.60 zł</div>
@@ -45,36 +49,28 @@
       </div>
     </div>
     
-    <div class="options-section">
-      <h2 class="options-section-title">Extension Behavior</h2>
+    <div class="vat-section">
+      <h2 class="vat-section-title">Extension Behavior</h2>
       
-      <div class="options-form-group">
-        <label class="options-label">
-          <input class="options-checkbox" type="checkbox" id="autoDetect" checked>
-          Auto-detect prices on page load
-        </label>
-        <div class="options-help-text">Automatically scan for prices when a page loads.</div>
-      </div>
-      
-      <div class="options-form-group">
-        <label class="options-label">
-          <input class="options-checkbox" type="checkbox" id="watchChanges" checked>
+      <div class="vat-form-group">
+        <label class="vat-label">
+          <input class="vat-checkbox" type="checkbox" id="watchChanges" checked>
           Watch for dynamic content changes
         </label>
-        <div class="options-help-text">Monitor the page for new content and scan for additional prices.</div>
+        <div class="vat-help-text" style="padding-left: 24px;">Monitor the page for new content and scan for additional prices.</div>
       </div>
       
-      <div class="options-form-group">
-        <label class="options-label">
-          <input class="options-checkbox" type="checkbox" id="showVATBreakdown" checked>
+      <div class="vat-form-group">
+        <label class="vat-label">
+          <input class="vat-checkbox" type="checkbox" id="showVATBreakdown" checked>
           Show VAT breakdown in tooltip
         </label>
-        <div class="options-help-text">Display the VAT amount in the hover tooltip.</div>
+        <div class="vat-help-text" style="padding-left: 24px;">Display the VAT amount in the hover tooltip.</div>
       </div>
     </div>
     
-    <button class="options-save-button" id="saveButton">Save Settings</button>
-    <div class="options-status" id="status" style="display: none;"></div>
+    <button class="vat-button--save" id="saveButton">SAVE SETTINGS</button>
+    <div class="vat-status" id="status" style="display: none;"></div>
   </div>
 
   <footer>&copy; 2026 by <a href="https://github.com/SkorczanFFF" target="_blank">SkorczanFFF</a></footer>

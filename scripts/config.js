@@ -8,7 +8,7 @@ const VAT_CONFIG = {
     { "code": "BY", "name": "Belarus", "rate": 20, "currency": "Br" },
     { "code": "HU", "name": "Hungary", "rate": 20, "currency": "Ft" },
     { "code": "BG", "name": "Bulgaria", "rate": 20, "currency": "лв" },
-    { "code": "HR", "name": "Croatia", "rate": 20, "currency": "kn" },
+    { "code": "HR", "name": "Croatia", "rate": 20, "currency": "€" },
     { "code": "LT", "name": "Lithuania", "rate": 20, "currency": "€" },
     { "code": "EE", "name": "Estonia", "rate": 20, "currency": "€" },
     { "code": "FR", "name": "France", "rate": 20, "currency": "€" },

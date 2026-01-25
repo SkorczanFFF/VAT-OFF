@@ -2,45 +2,100 @@ document.addEventListener('DOMContentLoaded', function() {
   const vatRateSelect = document.getElementById('vatRate');
   const customRateDiv = document.getElementById('customRateDiv');
   const customRateInput = document.getElementById('customRate');
-  const previewPrice = document.getElementById('previewPrice');
-  const saveButton = document.getElementById('saveButton');
+  const customCurrencyInput = document.getElementById('customCurrency');
+  const saveBtn = document.getElementById('saveButton');
   const statusDiv = document.getElementById('status');
-  
-  const autoDetect = document.getElementById('autoDetect');
-  const watchChanges = document.getElementById('watchChanges');
-  const showVATBreakdown = document.getElementById('showVATBreakdown');
-  const previewVatLine = document.getElementById('previewVatLine');
-  const previewOriginalPrice = document.getElementById('previewOriginalPrice');
+  const watchChangesCheckbox = document.getElementById('watchChanges');
+  const showVatBreakdownCheckbox = document.getElementById('showVATBreakdown');
+  const previewPriceSpan = document.getElementById('previewPrice');
+  const previewVatLineDiv = document.getElementById('previewVatLine');
+  const previewOriginalPriceSpan = document.getElementById('previewOriginalPrice');
   
   let previewTimeout = null;
 
   SettingsManager.populateSelect(vatRateSelect);
   loadSettings();
 
-  vatRateSelect.addEventListener('change', updateCustomRateVisibility);
-  
-  customRateInput.addEventListener('input', function() {
+  vatRateSelect.addEventListener('change', handleVatRateChange);
+  customRateInput.addEventListener('input', handleCustomRateInput);
+  customRateInput.addEventListener('change', handleCustomRateChange);
+  customCurrencyInput.addEventListener('input', updatePreview);
+  showVatBreakdownCheckbox.addEventListener('change', updatePreview);
+  saveBtn.addEventListener('click', handleSaveClick);
+  function handleVatRateChange() {
+    updateCustomRateVisibility();
+    updatePreview();
+  }
+
+  function handleCustomRateInput() {
     if (previewTimeout) {
       clearTimeout(previewTimeout);
     }
     previewTimeout = setTimeout(updatePreview, 300);
-  });
-  
-  vatRateSelect.addEventListener('change', updatePreview);
-  customRateInput.addEventListener('change', function() {
+  }
+
+  function handleCustomRateChange() {
     if (previewTimeout) {
       clearTimeout(previewTimeout);
       previewTimeout = null;
     }
     updatePreview();
-  });
-  
-  showVATBreakdown.addEventListener('change', updatePreview);
-  
-  saveButton.addEventListener('click', saveSettings);
+  }
+
+  function handleSaveClick() {
+    saveSettings();
+  }
+
+  function updateCustomRateVisibility() {
+    customRateDiv.style.display = vatRateSelect.value === 'custom' ? 'block' : 'none';
+  }
+
+  function updatePreview() {
+    const countryCode = SettingsManager.getCountryCode(vatRateSelect);
+    const vatRate = vatRateSelect.value === 'custom' ? 
+      parseInt(customRateInput.value, 10) || 23 : 
+      SettingsManager.getRate(countryCode);
+    
+    let currency;
+    if (vatRateSelect.value === 'custom') {
+      currency = customCurrencyInput.value.trim() || '€';
+    } else {
+      currency = SettingsManager.getCurrency(countryCode);
+    }
+    
+    if (vatRateSelect.value === 'custom') {
+      const validation = SettingsManager.validateVATRate(customRateInput.value);
+      if (!validation.valid) {
+        previewPriceSpan.textContent = '-- ' + currency;
+        previewVatLineDiv.textContent = 'VAT --%: -- ' + currency;
+        return;
+      }
+    }
+    
+    const priceWithVat = 199.99;
+    const priceWithoutVat = priceWithVat / (1 + vatRate / 100);
+    const vatAmount = priceWithVat - priceWithoutVat;
+    
+    previewOriginalPriceSpan.textContent = priceWithVat.toFixed(2) + ' ' + currency;
+    previewPriceSpan.textContent = priceWithoutVat.toFixed(2) + ' ' + currency;
+    previewVatLineDiv.textContent = `VAT ${vatRate}%: ${vatAmount.toFixed(2)} ${currency}`;
+    
+    previewVatLineDiv.style.display = showVatBreakdownCheckbox.checked ? 'block' : 'none';
+  }
+
+  function showStatus(message, type) {
+    const icon = type === 'success' ? '✓' : '⚠';
+    statusDiv.textContent = icon + ' ' + message;
+    statusDiv.className = `vat-status vat-status--${type}`;
+    statusDiv.style.display = 'block';
+    
+    setTimeout(function() {
+      statusDiv.style.display = 'none';
+    }, 5000);
+  }
 
   function loadSettings() {
-    const keys = ['vatRate', 'customRate', 'countryCode', 'autoDetect', 'watchChanges', 'showVATBreakdown'];
+    const keys = ['vatRate', 'customRate', 'customCurrency', 'countryCode', 'watchChanges', 'showVATBreakdown'];
     
     SettingsManager.loadSettings(keys, (result, error) => {
       if (error) {
@@ -54,14 +109,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (result.customRate) {
         customRateInput.value = result.customRate;
       }
-      if (result.autoDetect !== undefined) {
-        autoDetect.checked = result.autoDetect;
+      if (result.customCurrency) {
+        customCurrencyInput.value = result.customCurrency;
       }
       if (result.watchChanges !== undefined) {
-        watchChanges.checked = result.watchChanges;
+        watchChangesCheckbox.checked = result.watchChanges;
       }
       if (result.showVATBreakdown !== undefined) {
-        showVATBreakdown.checked = result.showVATBreakdown;
+        showVatBreakdownCheckbox.checked = result.showVATBreakdown;
       }
       
       updateCustomRateVisibility();
@@ -69,54 +124,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  function updateCustomRateVisibility() {
-    if (vatRateSelect.value === 'custom') {
-      customRateDiv.style.display = 'block';
-    } else {
-      customRateDiv.style.display = 'none';
-    }
-  }
-
-  function updatePreview() {
-    const vatRate = vatRateSelect.value === 'custom' ? 
-      parseInt(customRateInput.value, 10) || 23 : 
-      parseInt(vatRateSelect.value, 10);
-    
-    // Get currency based on selected country
-    const countryCode = SettingsManager.getCountryCode(vatRateSelect);
-    const currency = SettingsManager.getCurrency(countryCode);
-    
-    if (vatRateSelect.value === 'custom') {
-      const validation = SettingsManager.validateVATRate(customRateInput.value);
-      if (!validation.valid) {
-        previewPrice.textContent = '-- ' + currency;
-        previewVatLine.textContent = 'Invalid rate';
-        return;
-      }
-    }
-    
-    const priceWithVAT = 199.99;
-    const priceWithoutVAT = priceWithVAT / (1 + vatRate / 100);
-    const vatAmount = priceWithVAT - priceWithoutVAT;
-    
-    // Update preview with correct currency
-    previewOriginalPrice.textContent = priceWithVAT.toFixed(2) + ' ' + currency;
-    previewPrice.textContent = priceWithoutVAT.toFixed(2) + ' ' + currency;
-    previewVatLine.textContent = `VAT ${vatRate}%: ${vatAmount.toFixed(2)} ${currency}`;
-    
-    // Show/hide VAT breakdown based on checkbox
-    previewVatLine.style.display = showVATBreakdown.checked ? 'block' : 'none';
-  }
-
   function saveSettings() {
     const vatRate = vatRateSelect.value;
     const customRate = customRateInput.value;
+    const customCurrency = customCurrencyInput.value.trim().substring(0, 4);
     const countryCode = SettingsManager.getCountryCode(vatRateSelect);
 
     const additionalSettings = {
-      autoDetect: autoDetect.checked,
-      watchChanges: watchChanges.checked,
-      showVATBreakdown: showVATBreakdown.checked
+      watchChanges: watchChangesCheckbox.checked,
+      showVATBreakdown: showVatBreakdownCheckbox.checked,
+      customCurrency: customCurrency
     };
 
     const prepared = SettingsManager.prepareSettingsForSave(vatRate, customRate, countryCode, additionalSettings);
@@ -138,15 +155,5 @@ document.addEventListener('DOMContentLoaded', function() {
       
       showStatus('Settings saved successfully!', 'success');
     });
-  }
-
-  function showStatus(message, type) {
-    statusDiv.textContent = message;
-    statusDiv.className = `status ${type}`;
-    statusDiv.style.display = 'block';
-    
-    setTimeout(function() {
-      statusDiv.style.display = 'none';
-    }, 5000);
   }
 });

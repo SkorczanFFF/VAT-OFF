@@ -1,0 +1,142 @@
+.vat-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--vat-text);
+}
+
+.vat-custom-rate {
+  margin-top: 10px;
+}
+
+.custom-rate-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-rate-input {
+  flex: 1;
+}
+
+.custom-rate-percent {
+  color: var(--vat-text);
+  font-weight: bold;
+}
+
+.custom-currency-input {
+  width: 60px;
+  flex: none;
+  text-align: center;
+}
+
+.vat-page--popup .custom-rate-row {
+  gap: 6px;
+}
+
+.vat-page--popup .custom-currency-input {
+  width: 50px;
+}
+
+.vat-button {
+  background-color: var(--vat-primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-family: inherit;
+}
+
+.vat-button:hover {
+  background-color: var(--vat-secondary);
+}
+
+.vat-button:active {
+  filter: brightness(0.9);
+}
+
+.vat-button:disabled {
+  background-color: var(--vat-midnight);
+  cursor: not-allowed;
+  color: var(--vat-text-disabled);
+  filter: none;
+}
+
+.vat-status-message {
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+  color: #fff;
+}
+
+.vat-status-success {
+  background-color: rgba(40, 167, 69, 0.2);
+  border: 1px solid var(--vat-success);
+}
+
+.vat-status-error {
+  background-color: rgba(212, 0, 0, 0.2);
+  border: 1px solid var(--vat-error);
+}
+
+.vat-toast-message {
+  color: #fff;
+  padding: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.vat-success-message {
+  background: rgba(40, 167, 69, 0.2);
+  border: 1px solid var(--vat-success);
+}
+
+.vat-error-message {
+  background: rgba(212, 0, 0, 0.2);
+  border: 1px solid var(--vat-error);
+}
+
+.vat-tooltip-content,
+.preview-tooltip-content {
+  padding: 10px 10px 8px 12px;
+}
+
+.vat-tooltip-title,
+.preview-tooltip-title {
+  font-weight: bold;
+  color: var(--vat-text);
+  opacity: 0.8;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vat-tooltip-price,
+.preview-tooltip-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--vat-secondary);
+  margin-bottom: 2px;
+  filter: brightness(1.5);
+}
+
+.vat-tooltip-vat,
+.preview-tooltip-vat {
+  font-size: 12px;
+  color: #fff;
+  border-top: 1px solid var(--vat-midnight);
+  padding-top: 6px;
+}
+
+.vat-checkbox {
+  margin-right: 8px;
+  accent-color: var(--vat-primary);
+  margin-left: 0;
+}
+
+.vat-help-text {
+  font-size: 12px;
+  color: var(--vat-text);
+  opacity: 0.8;
+  margin-top: 4px;
+}

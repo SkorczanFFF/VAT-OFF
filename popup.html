@@ -6,34 +6,41 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/variables.css">
+  <link rel="stylesheet" href="styles/components.css">
   <link rel="stylesheet" href="styles/popup.css">
 </head>
-<body class="vat-body">
-  <div class="vat-container">
+<body class="vat-page--popup">
+  <div class="vat-container--popup">
     <div class="vat-header">
       <h2>VAT-OFF</h2>
-      <div class="vat-status vat-status-disabled" id="status">
+      <div class="vat-status-indicator vat-status-indicator--disabled" id="statusIndicator">
         Extension is disabled<span class="vat-status-dot"></span>
       </div>
     </div>
     <div class="vat-rate">
       <label class="vat-label" for="vatRate">VAT Rate:</label>
       <select class="vat-form-control" id="vatRate">
-        <!-- Options populated dynamically from config.js -->
       </select>
       
       <div class="vat-custom-rate" id="customRateDiv" style="display: none;">
-        <label class="vat-label" for="customRate">Custom VAT Rate (%):</label>
-        <input class="vat-form-control" type="number" id="customRate" min="0" max="100" step="1" placeholder="e.g., 15 or 23">
+        <label class="vat-label">Custom VAT Rate:</label>
+        <div class="custom-rate-row">
+          <input class="vat-form-control custom-rate-input" type="number" id="customRate" min="1" max="100" step="1" placeholder="23">
+          <span class="custom-rate-percent">%</span>
+          <input class="vat-form-control custom-currency-input" type="text" id="customCurrency" maxlength="4" placeholder="€">
+        </div>
+        <button class="vat-button vat-button--save-custom" id="saveCustomRateBtn">SAVE SETTINGS</button>
       </div>
     </div>
     
     <div class="vat-buttons-row">
-      <button class="vat-button" id="toggleExtension">Toggle Extension</button>
-      <button class="vat-button" id="openOptions">
+      <button class="vat-button" id="toggleBtn">Enable Extension</button>
+      <button class="vat-button" id="optionsBtn">
         <img src="icons/settings.svg" alt="Settings" class="vat-button-icon">
       </button>
     </div>
+    
+    <div id="messageContainer"></div>
   </div>
   
   <script src="scripts/error-handler.js"></script>

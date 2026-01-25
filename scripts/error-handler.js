@@ -25,7 +25,6 @@ const ErrorHandler = {
     const prefix = 'VAT-OFF';
     const severityUpper = String(severity).toUpperCase();
     
-    // Format details as readable string
     let detailsStr = '';
     if (details) {
       try {
@@ -45,8 +44,6 @@ const ErrorHandler = {
 
     switch (severity) {
       case this.Severity.DEBUG:
-        // DEBUG messages are suppressed in production - they don't log at all
-        // This prevents noise in chrome://extensions error page
         break;
 
       case this.Severity.INFO:

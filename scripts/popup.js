@@ -2,58 +2,30 @@ document.addEventListener('DOMContentLoaded', function() {
   const vatRateSelect = document.getElementById('vatRate');
   const customRateDiv = document.getElementById('customRateDiv');
   const customRateInput = document.getElementById('customRate');
-  const statusDiv = document.getElementById('status');
-  const toggleButton = document.getElementById('toggleExtension');
-  const openOptionsButton = document.getElementById('openOptions');
+  const customCurrencyInput = document.getElementById('customCurrency');
+  const saveCustomRateBtn = document.getElementById('saveCustomRateBtn');
+  const statusIndicator = document.getElementById('statusIndicator');
+  const messageContainer = document.getElementById('messageContainer');
+  const toggleBtn = document.getElementById('toggleBtn');
+  const optionsBtn = document.getElementById('optionsBtn');
 
-  SettingsManager.populateSelect(vatRateSelect);
-
-  let cachedEnabledState = false;
+  let isEnabled = false;
   let saveTimeout = null;
 
-  function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'vat-error-message';
-    errorDiv.textContent = message;
-    errorDiv.style.cssText = 'background: rgba(220,53,69,0.2); color: #fff; padding: 8px; margin: 8px 0; border: 1px solid #d40000; font-size: 12px;';
-    statusDiv.parentNode.insertBefore(errorDiv, statusDiv);
-    setTimeout(() => errorDiv.remove(), 5000);
-  }
+  SettingsManager.populateSelect(vatRateSelect);
+  loadSettings();
 
-  SettingsManager.loadSettings(['vatRate', 'customRate', 'enabled', 'countryCode'], (result, error) => {
-    if (error) {
-      showError('Failed to load settings. Please try again.');
-      return;
-    }
-    
-    if (result.vatRate) {
-      vatRateSelect.value = result.vatRate;
-    }
-    if (result.customRate) {
-      customRateInput.value = result.customRate;
-    }
-    if (result.countryCode) {
-      const selectedOption = vatRateSelect.querySelector(`option[value="${result.vatRate}"]`);
-      if (selectedOption && selectedOption.dataset.country) {
-        selectedOption.dataset.country = result.countryCode;
-      }
-    }
-    if (result.enabled !== undefined) {
-      cachedEnabledState = result.enabled;
-      updateStatus(result.enabled);
-    } else {
-      cachedEnabledState = false;
-      updateStatus(false);
-    }
-    updateCustomRateVisibility();
-  });
-
-  vatRateSelect.addEventListener('change', function() {
+  vatRateSelect.addEventListener('change', handleVatRateChange);
+  customRateInput.addEventListener('input', handleCustomRateInput);
+  toggleBtn.addEventListener('click', handleToggleClick);
+  optionsBtn.addEventListener('click', handleOptionsClick);
+  saveCustomRateBtn.addEventListener('click', handleSaveCustomRateClick);
+  function handleVatRateChange() {
     updateCustomRateVisibility();
     saveSettings();
-  });
+  }
 
-  customRateInput.addEventListener('input', function() {
+  function handleCustomRateInput() {
     const validation = SettingsManager.validateVATRate(customRateInput.value);
     if (!validation.valid) {
       customRateInput.style.borderColor = '#d40000';
@@ -70,10 +42,10 @@ document.addEventListener('DOMContentLoaded', function() {
     saveTimeout = setTimeout(() => {
       saveSettings();
     }, 500);
-  });
+  }
 
-  toggleButton.addEventListener('click', function() {
-    const newEnabled = !cachedEnabledState;
+  function handleToggleClick() {
+    const newEnabled = !isEnabled;
     chrome.storage.sync.set({ enabled: newEnabled }, function() {
       if (chrome.runtime.lastError) {
         ErrorHandler.storage('Failed to save enabled state', chrome.runtime.lastError);
@@ -81,32 +53,91 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      cachedEnabledState = newEnabled;
-      updateStatus(newEnabled);
+      isEnabled = newEnabled;
+      updateStatusIndicator(newEnabled);
     });
-  });
-
-  openOptionsButton.addEventListener('click', function() {
-    chrome.runtime.openOptionsPage();
-  });
-
-  function updateCustomRateVisibility() {
-    if (vatRateSelect.value === 'custom') {
-      customRateDiv.style.display = 'block';
-    } else {
-      customRateDiv.style.display = 'none';
-    }
   }
 
-  function saveSettings() {
+  function handleOptionsClick() {
+    chrome.runtime.openOptionsPage();
+  }
+
+  function handleSaveCustomRateClick() {
+    saveSettings(true);
+  }
+
+  function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'vat-toast-message vat-error-message';
+    errorDiv.textContent = '⚠ ' + message;
+    messageContainer.appendChild(errorDiv);
+    setTimeout(() => errorDiv.remove(), 3000);
+  }
+
+  function showSuccess(message) {
+    const successDiv = document.createElement('div');
+    successDiv.className = 'vat-toast-message vat-success-message';
+    successDiv.textContent = '✓ ' + message;
+    messageContainer.appendChild(successDiv);
+    setTimeout(() => successDiv.remove(), 3000);
+  }
+
+  function updateCustomRateVisibility() {
+    customRateDiv.style.display = vatRateSelect.value === 'custom' ? 'block' : 'none';
+  }
+
+  function updateStatusIndicator(enabled) {
+    statusIndicator.textContent = '';
+    statusIndicator.className = enabled 
+      ? 'vat-status-indicator vat-status-indicator--enabled' 
+      : 'vat-status-indicator vat-status-indicator--disabled';
+    
+    const statusText = document.createTextNode(enabled ? 'Extension is active' : 'Extension is disabled');
+    statusIndicator.appendChild(statusText);
+    
+    const dot = document.createElement('span');
+    dot.className = 'vat-status-dot';
+    statusIndicator.appendChild(dot);
+    
+    toggleBtn.textContent = enabled ? 'Disable Extension' : 'Enable Extension';
+  }
+
+  function loadSettings() {
+    SettingsManager.loadSettings(['vatRate', 'customRate', 'customCurrency', 'enabled'], (result, error) => {
+      if (error) {
+        showError('Failed to load settings. Please try again.');
+        return;
+      }
+      
+      if (result.vatRate) {
+        vatRateSelect.value = result.vatRate;
+      }
+      if (result.customRate) {
+        customRateInput.value = result.customRate;
+      }
+      if (result.customCurrency) {
+        customCurrencyInput.value = result.customCurrency;
+      }
+      if (result.enabled !== undefined) {
+        isEnabled = result.enabled;
+        updateStatusIndicator(result.enabled);
+      } else {
+        isEnabled = false;
+        updateStatusIndicator(false);
+      }
+      updateCustomRateVisibility();
+    });
+  }
+
+  function saveSettings(showSuccessMessage) {
     const vatRate = vatRateSelect.value;
     const customRate = customRateInput.value;
+    const customCurrency = customCurrencyInput.value.trim().substring(0, 4);
     const countryCode = SettingsManager.getCountryCode(vatRateSelect);
     
-    const prepared = SettingsManager.prepareSettingsForSave(vatRate, customRate, countryCode);
+    const prepared = SettingsManager.prepareSettingsForSave(vatRate, customRate, countryCode, { customCurrency: customCurrency });
     
     if (prepared.error) {
-      // Don't log validation errors to console - they're expected user input issues
       showError(prepared.error);
       return;
     }
@@ -118,21 +149,9 @@ document.addEventListener('DOMContentLoaded', function() {
     SettingsManager.saveSettings(prepared.settings, (error) => {
       if (error) {
         showError('Failed to save settings. Please try again.');
+      } else if (showSuccessMessage) {
+        showSuccess('Settings saved!');
       }
     });
-  }
-
-  function updateStatus(enabled) {
-    statusDiv.textContent = '';
-    statusDiv.className = enabled ? 'vat-status vat-status-enabled' : 'vat-status vat-status-disabled';
-    
-    const statusText = document.createTextNode(enabled ? 'Extension is active' : 'Extension is disabled');
-    statusDiv.appendChild(statusText);
-    
-    const dot = document.createElement('span');
-    dot.className = 'vat-status-dot';
-    statusDiv.appendChild(dot);
-    
-    toggleButton.textContent = enabled ? 'Disable Extension' : 'Enable Extension';
   }
 });

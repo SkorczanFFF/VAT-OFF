@@ -1,4 +1,5 @@
-.options-body {
+
+.vat-page--options {
   font-family: 'Space Grotesk', Arial, sans-serif;
   max-width: 460px;
   margin: 0 auto;
@@ -7,48 +8,37 @@
   margin-top: 40px;
 }
 
-.options-container {
+.vat-container--options {
   background: var(--vat-midnight);
   padding: 20px;
   box-shadow: 0 2px 10px rgba(11, 13, 22, 0.5);
 }
 
-.options-title {
+.vat-title {
   color: #fff;
   text-align: center;
   margin-top: 0;
   margin-bottom: 30px;
 }
 
-.options-section {
+.vat-section {
   margin-bottom: 20px;
 }
 
-.options-section-title {
+.vat-section-title {
   margin-top: 0;
   color: var(--vat-text);
   font-size: 16px;
 }
 
-.options-form-group {
+.vat-form-group {
   margin-bottom: 10px;
 }
 
-.options-label {
-  display: block;
-  margin-bottom: 4px;
-  font-weight: bold;
-  color: var(--vat-text);
-}
-
-.options-custom-rate {
-  margin-top: 10px;
-}
-
-.options-save-button {
+.vat-button--save {
   background-color: var(--vat-primary);
   color: #fff;
-  padding: 12px 30px;
+  padding: 10px;
   border: none;
   font-size: 16px;
   font-family: inherit;
@@ -57,137 +47,77 @@
   transition: 0.2s ease;
 }
 
-.options-save-button:hover {
+.vat-button--save:hover {
   background-color: var(--vat-secondary);
 }
 
-.options-save-button:active {
+.vat-button--save:active {
   filter: brightness(0.9);
 }
 
-.options-save-button:disabled {
+.vat-button--save:disabled {
   background-color: var(--vat-midnight);
   cursor: not-allowed;
   color: var(--vat-text-disabled);
   filter: none;
 }
 
-.options-status {
+.vat-status {
   margin-top: 10px;
-  padding: 12px;
+  padding: 6px;
   text-align: center;
   font-weight: bold;
   font-size: 16px;
   text-transform: uppercase;
 }
 
-.options-status-success {
+.vat-status--success {
   background-color: rgba(40, 167, 69, 0.2);
   color: #fff;
   border: 1px solid var(--vat-success);
 }
 
-.options-status-error {
+.vat-status--error {
   background-color: rgba(212, 0, 0, 0.2);
   color: #fff;
   border: 1px solid var(--vat-error);
 }
 
-.options-help-text {
-  font-size: 12px;
-  color: var(--vat-text);
-  opacity: 0.8;
-  margin-top: 4px;
-  padding-left: 24px;
-}
-
-.options-preview {
+.vat-preview {
   margin-top: 15px;
   background-color: rgba(11, 13, 22, 0.5);
   border: 1px solid rgba(11, 13, 22, 0.8);
 }
 
-.preview-label {
+.vat-preview-label {
   font-size: 16px;
   margin-bottom: 15px;
   letter-spacing: 0.5px;
   font-weight: bold;
 }
 
-.preview-scene {
+.vat-preview-scene {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
   justify-content: center;
 }
 
-.preview-price-text {
+.vat-preview-price {
   font-size: 18px;
   font-weight: 600;
   color: var(--vat-text);
-  padding-bottom: 2px;
-  background-color: rgba(128, 24, 52, 0.1);
   padding: 4px 8px;
 }
 
-.preview-tooltip {
+.vat-preview-tooltip {
   background: var(--vat-stellar);
   border: 1px solid var(--vat-midnight);
   box-shadow: 0 4px 12px rgba(11, 13, 22, 0.5);
   max-width: 160px;
 }
 
-.preview-tooltip-content {
-  padding: 10px 10px 8px 12px;
-}
-
-.preview-tooltip-title {
-  font-weight: bold;
-  color: var(--vat-text);
-  opacity: 0.8;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.preview-tooltip-price {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--vat-secondary);
-  margin-bottom: 2px;
-  filter: brightness(1.5);
-}
-
 .preview-tooltip-vat {
-  font-size: 12px;
-  color: #fff;
-  border-top: 1px solid var(--vat-midnight);
-  padding-top: 6px;
   margin-top: 4px;
-}
-
-.options-checkbox {
-  margin-right: 8px;
-  accent-color: var(--vat-primary);
-  margin-left: 0;
-}
-
-.status.success { 
-  background: rgba(40, 167, 69, 0.2);
-  color: #fff;
-  padding: 8px;
-  margin: 8px 0;
-  border: 1px solid var(--vat-success);
-  font-size: 12px;
-}
-
-.status.error { 
-  background: rgba(212, 0, 0, 0.2);
-  color: #fff;
-  padding: 8px;
-  margin: 8px 0;
-  border: 1px solid var(--vat-error);
-  font-size: 12px;
 }
 
 footer {

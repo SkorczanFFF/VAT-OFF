@@ -17,12 +17,12 @@ class VATCalculator {
     this.MIN_PRICE = 1;
     this.RESCAN_DEBOUNCE_MS = 1000;
     this.MAX_PRICE_ELEMENTS = 500;
-    this.MAX_TREE_DEPTH = 50;
     
     this.enabled = false;
     this.vatRate = 20;
     this.countryCode = this.detectCountryCode();
-    this.autoDetect = true;
+    this.customCurrency = '';
+    this.isCustomRate = false;
     this.watchChanges = true;
     this.showVATBreakdown = true;
     this.priceElements = [];
@@ -60,10 +60,19 @@ class VATCalculator {
           needsUpdate = true;
         }
         
-        if (changes.vatRate || changes.customRate) {
-          const vatRate = changes.vatRate ? changes.vatRate.newValue : this.vatRate;
-          const customRate = changes.customRate ? changes.customRate.newValue : '';
-          const newRate = vatRate === 'custom' ? parseInt(customRate, 10) || 20 : parseInt(vatRate, 10);
+        if (changes.vatRate || changes.vatRateNumber || changes.customRate) {
+          const vatRate = changes.vatRate ? changes.vatRate.newValue : (this.isCustomRate ? 'custom' : 'unknown');
+          this.isCustomRate = vatRate === 'custom';
+          
+          let newRate;
+          if (changes.vatRateNumber) {
+            newRate = changes.vatRateNumber.newValue;
+          } else if (this.isCustomRate) {
+            const customRate = changes.customRate ? changes.customRate.newValue : '';
+            newRate = parseInt(customRate, 10) || 20;
+          } else {
+            newRate = this.vatRate; // Keep existing rate
+          }
           
           if (newRate !== this.vatRate) {
             this.vatRate = newRate;
@@ -71,16 +80,14 @@ class VATCalculator {
           }
         }
         
-        if (changes.countryCode && changes.countryCode.newValue !== this.countryCode) {
-          this.countryCode = changes.countryCode.newValue;
+        if (changes.customCurrency) {
+          this.customCurrency = changes.customCurrency.newValue || '';
           needsUpdate = true;
         }
         
-        if (changes.autoDetect !== undefined && changes.autoDetect.newValue !== this.autoDetect) {
-          this.autoDetect = changes.autoDetect.newValue;
-          if (this.autoDetect) {
-            needsRescan = true;
-          }
+        if (changes.countryCode && changes.countryCode.newValue !== this.countryCode) {
+          this.countryCode = changes.countryCode.newValue;
+          needsUpdate = true;
         }
         
         if (changes.watchChanges !== undefined && changes.watchChanges.newValue !== this.watchChanges) {
@@ -109,9 +116,7 @@ class VATCalculator {
       }
     });
 
-    if (this.autoDetect) {
-      this.scanForPrices();
-    }
+    this.scanForPrices();
     
     if (this.watchChanges) {
       this.observeChanges();
@@ -119,23 +124,30 @@ class VATCalculator {
   }
 
   loadSettings() {
-    chrome.storage.sync.get(['vatRate', 'customRate', 'enabled', 'countryCode', 'autoDetect', 'watchChanges', 'showVATBreakdown'], (result) => {
+    chrome.storage.sync.get(['vatRate', 'vatRateNumber', 'customRate', 'customCurrency', 'enabled', 'countryCode', 'watchChanges', 'showVATBreakdown'], (result) => {
       if (chrome.runtime.lastError) {
         ErrorHandler.storage('Failed to load settings', chrome.runtime.lastError);
         return;
       }
       
       if (result.vatRate) {
-        this.vatRate = result.vatRate === 'custom' ? parseInt(result.customRate, 10) || 23 : parseInt(result.vatRate, 10);
+        this.isCustomRate = result.vatRate === 'custom';
+        if (result.vatRateNumber) {
+          this.vatRate = result.vatRateNumber;
+        } else if (this.isCustomRate) {
+          this.vatRate = parseInt(result.customRate, 10) || 23;
+        } else {
+          this.vatRate = 20; // Default fallback
+        }
+      }
+      if (result.customCurrency) {
+        this.customCurrency = result.customCurrency;
       }
       if (result.countryCode) {
         this.countryCode = result.countryCode;
       }
       if (result.enabled !== undefined) {
         this.enabled = result.enabled;
-      }
-      if (result.autoDetect !== undefined) {
-        this.autoDetect = result.autoDetect;
       }
       if (result.watchChanges !== undefined) {
         this.watchChanges = result.watchChanges;
@@ -214,13 +226,8 @@ class VATCalculator {
 
     try {
       const pricePatterns = [
-        // Pattern 1: Numbers followed by currency symbols
         /(\d{1,3}(?:[\s,.]\d{3}){0,4}(?:[.,]\d{2})?)\s*(?:zł|PLN|€|EUR|\$|USD|£|GBP|kr|Kč|lei|лв|₴|Br|Ft|kn)/gi,
-        // Pattern 2: Price labels followed by numbers
         /(?:price|cost|amount|total|sum|cena|preis|prix|precio|prezzo|valor):\s*(\d{1,3}(?:[\s,.]\d{3}){0,4}(?:[.,]\d{2})?)/gi,
-        // Pattern 3: Standalone price-like numbers
-        // Added (?![\d]) to prevent matching partial numbers (e.g., "9 595" from "9 5950")
-        // Added (?![a-zA-Z]) to prevent matching model numbers (e.g., "5950X")
         /(\d{1,3}(?:[\s,.]\d{3}){1,4}(?:[.,]\d{2})?(?![\da-zA-Z])|\d{4,7}(?:[.,]\d{2})(?![\da-zA-Z]))/g
       ];
 
@@ -338,7 +345,6 @@ class VATCalculator {
       'qty', 'quantity', 'ilość', 'szt', 'pcs', 'pieces', 'units'
     ];
     
-    // Product/model name keywords - numbers near these are likely model numbers, not prices
     const productKeywords = [
       'ryzen', 'intel', 'core', 'xeon', 'celeron', 'pentium', 'athlon',
       'geforce', 'radeon', 'nvidia', 'amd', 'gtx', 'rtx', 'rx',
@@ -360,7 +366,6 @@ class VATCalculator {
         }
       }
       
-      // Check for product/model keywords
       for (const pk of productKeywords) {
         if (surroundingContext.includes(pk)) {
           return false;
@@ -382,29 +387,21 @@ class VATCalculator {
         !(/price|cost|€|\$|£|zł/i.test(contextWindow))) return false;
     if (/build\s*\d+/i.test(contextWindow)) return false;
     
-    // Check if price text is immediately followed by letters (model number pattern)
-    // e.g., "5950X", "3090Ti", "i7-12700K"
     const afterPriceIndex = priceStartIndex + priceText.length;
     if (afterPriceIndex < text.length) {
       const charAfter = text.charAt(afterPriceIndex);
-      // If immediately followed by a letter, it's likely a model number
       if (/[a-zA-Z]/.test(charAfter)) {
         return false;
       }
     }
     
-    // Check if price text is immediately preceded by a letter (model number pattern)
-    // e.g., "i5-12400", "RX 7900"
     if (priceStartIndex > 0) {
       const charBefore = text.charAt(priceStartIndex - 1);
-      // If immediately preceded by a letter (not a space or punctuation), it's likely a model number
       if (/[a-zA-Z]/.test(charBefore)) {
         return false;
       }
     }
     
-    // Check for alphanumeric model number pattern in context
-    // Matches patterns like "i7-12700K", "RTX 3090", "RX 7900 XTX"
     if (/\b[a-zA-Z]{1,4}\d+[a-zA-Z]*\b/.test(contextWindow) && 
         !(/price|cost|€|\$|£|zł|cena/i.test(contextWindow))) {
       return false;
@@ -523,7 +520,6 @@ class VATCalculator {
         return;
       }
 
-      // Verify it's actually a text node
       if (textNode.nodeType !== Node.TEXT_NODE) {
         ErrorHandler.dom('Node is not a text node', { nodeType: textNode.nodeType });
         return;
@@ -536,14 +532,9 @@ class VATCalculator {
         return;
       }
       
-      // Get current text content - it might have changed since the match was found
-      // Use nodeValue for text nodes (more efficient and correct)
       const text = textNode.nodeValue || textNode.textContent || '';
       
-      // Validate indices are within bounds
       if (!text || startIndex < 0 || length <= 0 || startIndex + length > text.length) {
-        // This is expected on dynamic sites - text node was modified between scan and element creation
-        // Use DEBUG level to avoid noise in console
         ErrorHandler.domDebug('Text node modified since scan, skipping', {
           textLength: text ? text.length : 0,
           startIndex,
@@ -554,7 +545,6 @@ class VATCalculator {
       
       const priceText = text.substring(startIndex, startIndex + length);
       
-      // Verify the extracted text looks like a price (sanity check)
       if (!priceText || priceText.trim().length === 0) {
         ErrorHandler.dom('Extracted price text is empty');
         return;
@@ -707,6 +697,10 @@ class VATCalculator {
   }
 
   getCurrencySymbol(originalText) {
+    if (this.isCustomRate) {
+      return this.customCurrency || '€';
+    }
+    
     if (!originalText) {
       return this.getCurrencyByCountryCode(this.countryCode);
     }
@@ -722,7 +716,7 @@ class VATCalculator {
     if (originalText.includes('Ft') || originalText.includes('HUF')) return 'Ft';
     if (originalText.includes('lei') || originalText.includes('RON')) return 'lei';
     if (originalText.includes('лв') || originalText.includes('BGN')) return 'лв';
-    if (originalText.includes('kn') || originalText.includes('HRK')) return 'kn';
+    if (originalText.includes('kn') || originalText.includes('HRK')) return '€';
     
     return this.getCurrencyByCountryCode(this.countryCode);
   }
@@ -803,7 +797,7 @@ class VATCalculator {
         }
       });
       
-      if (shouldRescan && this.autoDetect) {
+      if (shouldRescan) {
         clearTimeout(this.rescanTimeout);
         this.rescanTimeout = setTimeout(() => {
           try {

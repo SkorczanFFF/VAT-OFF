@@ -6,8 +6,7 @@ const SettingsManager = {
     
     VAT_CONFIG.countries.forEach(country => {
       const option = document.createElement('option');
-      option.value = country.rate;
-      option.dataset.country = country.code;
+      option.value = country.code;
       option.textContent = `${country.name} - ${country.rate}%`;
       selectElement.appendChild(option);
     });
@@ -37,8 +36,8 @@ const SettingsManager = {
       return { valid: false, error: 'VAT rate must be a valid number' };
     }
     
-    if (rate < 0) {
-      return { valid: false, error: 'VAT rate cannot be negative' };
+    if (rate <= 0) {
+      return { valid: false, error: 'VAT rate must be at least 1%' };
     }
     
     if (rate > 100) {
@@ -64,9 +63,17 @@ const SettingsManager = {
   },
 
   getCountryCode(selectElement) {
-    // Use selectedOptions[0] to get the actually selected option, not just the first with matching value
-    const selectedOption = selectElement.selectedOptions[0];
-    return selectedOption ? selectedOption.dataset.country : this.detectDefaultCountryCode();
+    const value = selectElement.value;
+    if (value === 'custom') {
+      return this.detectDefaultCountryCode();
+    }
+    return value || this.detectDefaultCountryCode();
+  },
+
+  getRate(countryCode) {
+    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !countryCode) return 20;
+    const country = VAT_CONFIG.countries.find(c => c.code === countryCode);
+    return country ? country.rate : 20;
   },
 
   getCurrency(countryCode) {
@@ -99,6 +106,7 @@ const SettingsManager = {
 
   prepareSettingsForSave(vatRateValue, customRateValue, countryCode, additionalSettings = {}) {
     let customRate = customRateValue;
+    let vatRateNumber;
     
     if (vatRateValue === 'custom') {
       const validation = this.validateVATRate(customRate);
@@ -106,11 +114,15 @@ const SettingsManager = {
         return { error: validation.error };
       }
       customRate = validation.sanitized;
+      vatRateNumber = parseInt(customRate, 10);
+    } else {
+      vatRateNumber = this.getRate(vatRateValue);
     }
 
     return {
       settings: {
         vatRate: vatRateValue,
+        vatRateNumber: vatRateNumber,
         customRate: customRate,
         countryCode: countryCode,
         ...additionalSettings
