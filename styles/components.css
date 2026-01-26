@@ -25,17 +25,13 @@
 }
 
 .custom-currency-input {
-  width: 60px;
+  width: 80px;
   flex: none;
   text-align: center;
 }
 
 .vat-page--popup .custom-rate-row {
   gap: 6px;
-}
-
-.vat-page--popup .custom-currency-input {
-  width: 50px;
 }
 
 .vat-button {
@@ -62,47 +58,41 @@
   filter: none;
 }
 
-.vat-status-message {
-  padding: 12px;
+.vat-status {
+  padding: 8px;
   text-align: center;
   font-weight: bold;
-  color: #fff;
+  color: var(--vat-text-white);
+  border: 1px solid;
 }
 
-.vat-status-success {
-  background-color: rgba(40, 167, 69, 0.2);
-  border: 1px solid var(--vat-success);
+.vat-status--success {
+  background-color: var(--vat-success-bg);
+  border-color: var(--vat-success);
 }
 
-.vat-status-error {
-  background-color: rgba(212, 0, 0, 0.2);
-  border: 1px solid var(--vat-error);
+.vat-status--error {
+  background-color: var(--vat-error-bg);
+  border-color: var(--vat-error);
 }
 
-.vat-toast-message {
-  color: #fff;
+.vat-status--large {
   padding: 8px;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+
+.vat-status--toast {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 14px;
 }
 
-.vat-success-message {
-  background: rgba(40, 167, 69, 0.2);
-  border: 1px solid var(--vat-success);
-}
-
-.vat-error-message {
-  background: rgba(212, 0, 0, 0.2);
-  border: 1px solid var(--vat-error);
-}
-
-.vat-tooltip-content,
-.preview-tooltip-content {
+.vat-tooltip-content {
   padding: 10px 10px 8px 12px;
+  border: 1px solid var(--vat-primary);
 }
 
-.vat-tooltip-title,
-.preview-tooltip-title {
+.vat-tooltip-title {
   font-weight: bold;
   color: var(--vat-text);
   opacity: 0.8;
@@ -111,8 +101,7 @@
   letter-spacing: 0.5px;
 }
 
-.vat-tooltip-price,
-.preview-tooltip-price {
+.vat-tooltip-price {
   font-size: 20px;
   font-weight: 700;
   color: var(--vat-secondary);
@@ -120,17 +109,16 @@
   filter: brightness(1.5);
 }
 
-.vat-tooltip-vat,
-.preview-tooltip-vat {
+.vat-tooltip-vat {
   font-size: 12px;
-  color: #fff;
+  color: var(--vat-text-white);
   border-top: 1px solid var(--vat-midnight);
   padding-top: 6px;
 }
 
 .vat-checkbox {
-  margin-right: 8px;
-  accent-color: var(--vat-primary);
+  margin-right: 4px;
+  accent-color: var(--vat-secondary);
   margin-left: 0;
 }
 

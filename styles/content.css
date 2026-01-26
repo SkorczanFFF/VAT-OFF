@@ -4,7 +4,6 @@
   transition: background-color 0.2s ease;
 }
 
-
 .vat-price-container {
   cursor: help;
   position: relative;
@@ -45,10 +44,6 @@
 
 .vat-tooltip.vat-hiding {
   animation: vatFadeOut 0.15s ease forwards;
-}
-
-.vat-tooltip-price {
-  border: none;
 }
 
 @keyframes vatFadeIn {

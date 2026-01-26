@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const statusDiv = document.getElementById('status');
   const watchChangesCheckbox = document.getElementById('watchChanges');
   const showVatBreakdownCheckbox = document.getElementById('showVATBreakdown');
+  const showCalculatorCheckbox = document.getElementById('showCalculator');
   const previewPriceSpan = document.getElementById('previewPrice');
   const previewVatLineDiv = document.getElementById('previewVatLine');
   const previewOriginalPriceSpan = document.getElementById('previewOriginalPrice');
@@ -105,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function showStatus(message, type) {
     const icon = type === 'success' ? '✓' : '⚠';
     statusDiv.textContent = icon + ' ' + message;
-    statusDiv.className = `vat-status vat-status--${type}`;
+    statusDiv.className = `vat-status vat-status--${type} vat-status--large`;
     statusDiv.style.display = 'block';
     
     setTimeout(function() {
@@ -114,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function loadSettings() {
-    const keys = ['vatRegion', 'vatRate', 'customRate', 'customCurrency', 'countryCode', 'watchChanges', 'showVATBreakdown'];
+    const keys = ['vatRegion', 'vatRate', 'customRate', 'customCurrency', 'countryCode', 'watchChanges', 'showVATBreakdown', 'showCalculator'];
     
     SettingsManager.loadSettings(keys, (result, error) => {
       if (error) {
@@ -163,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
       vatRegion: vatRegion,
       watchChanges: watchChangesCheckbox.checked,
       showVATBreakdown: showVatBreakdownCheckbox.checked,
+      showCalculator: showCalculatorCheckbox.checked,
       customCurrency: customCurrency
     };
 

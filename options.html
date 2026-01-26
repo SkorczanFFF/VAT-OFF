@@ -49,10 +49,10 @@
           <div class="vat-preview-scene">
             <span class="vat-preview-price" id="previewOriginalPrice">199,99 zł</span>
             <div class="vat-preview-tooltip">
-              <div class="preview-tooltip-content">
-                <div class="preview-tooltip-title">Without VAT</div>
-                <div class="preview-tooltip-price" id="previewPrice">162.60 zł</div>
-                <div class="preview-tooltip-vat" id="previewVatLine">VAT 23%: 37.39 zł</div>
+              <div class="vat-tooltip-content">
+                <div class="vat-tooltip-title">Without VAT</div>
+                <div class="vat-tooltip-price" id="previewPrice">162.60 zł</div>
+                <div class="vat-tooltip-vat" id="previewVatLine">VAT 23%: 37.39 zł</div>
               </div>
             </div>
           </div>
@@ -61,13 +61,12 @@
       
       <div class="vat-section">
         <h2 class="vat-section-title">Extension Behavior</h2>
-        
         <div class="vat-form-group">
           <label class="vat-label">
-            <input class="vat-checkbox" type="checkbox" id="watchChanges" checked>
-            Watch for dynamic content changes
+            <input class="vat-checkbox" type="checkbox" id="showCalculator">
+            Show calculator in popup
           </label>
-          <div class="vat-help-text" style="padding-left: 24px;">Monitor the page for new content and scan for additional prices.</div>
+          <div class="vat-help-text" style="padding-left: 24px;">Display a VAT calculator in the popup for quick conversions between brutto and netto amounts.</div>
         </div>
         
         <div class="vat-form-group">
@@ -76,6 +75,14 @@
             Show VAT breakdown in tooltip
           </label>
           <div class="vat-help-text" style="padding-left: 24px;">Display the VAT amount in the hover tooltip.</div>
+        </div>
+        
+        <div class="vat-form-group">
+          <label class="vat-label">
+            <input class="vat-checkbox" type="checkbox" id="watchChanges" checked>
+            Watch for dynamic content changes
+          </label>
+          <div class="vat-help-text" style="padding-left: 24px;">Monitor the page for new content and scan for additional prices.</div>
         </div>
       </div>
       

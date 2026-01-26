@@ -5,8 +5,11 @@
   --vat-midnight: #0b0d16;
   --vat-text: #f5f5f5;
   --vat-text-disabled: #666;
+  --vat-text-white: #fff;
   --vat-success: #28a745;
   --vat-error: #d40000;
+  --vat-success-bg: rgba(40, 167, 69, 0.2);
+  --vat-error-bg: rgba(212, 0, 0, 0.2);
 }
 .vat-form-control {
   width: 100%;
@@ -27,4 +30,9 @@ select.vat-form-control {
   outline: none;
   border-color: var(--vat-primary);
   box-shadow: 0 0 0 2px rgba(128, 24, 52, 0.25);
+}
+
+.vat-form-control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

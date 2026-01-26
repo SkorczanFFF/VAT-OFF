@@ -9,7 +9,6 @@
 }
 
 .vat-container--options {
-  background: var(--vat-midnight);
   padding: 4px;
   box-shadow: 0 2px 10px rgba(11, 13, 22, 0.5);
   background: linear-gradient(270deg, var(--vat-secondary), var(--vat-primary));
@@ -17,14 +16,15 @@
 
 .vat-container-wrapper {
   background: var(--vat-midnight);
-  padding: 20px;
+  padding: 16px;
 }
 
 .vat-title {
-  color: #fff;
+  color: var(--vat-primary);
   text-align: center;
   margin-top: 0;
   margin-bottom: 30px;
+  filter: brightness(1.3);
 }
 
 .vat-section {
@@ -39,11 +39,6 @@
 
 .vat-form-group {
   margin-bottom: 10px;
-}
-
-.vat-form-group .vat-form-control:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .vat-region-country-row {
@@ -102,25 +97,11 @@
 
 .vat-status {
   margin-top: 10px;
-  padding: 6px;
-  text-align: center;
-  font-weight: bold;
-  font-size: 16px;
-  text-transform: uppercase;
 }
 
-.vat-status--success {
-  background-color: rgba(40, 167, 69, 0.2);
-  color: #fff;
-  border: 1px solid var(--vat-success);
+.vat-preview {
+  margin-top: 16px;
 }
-
-.vat-status--error {
-  background-color: rgba(212, 0, 0, 0.2);
-  color: #fff;
-  border: 1px solid var(--vat-error);
-}
-
 
 .vat-preview-label {
   font-size: 16px;
@@ -147,10 +128,6 @@
   border: 1px solid var(--vat-midnight);
   box-shadow: 0 4px 12px rgba(11, 13, 22, 0.5);
   max-width: 160px;
-}
-
-.preview-tooltip-vat {
-  margin-top: 4px;
 }
 
 footer {
