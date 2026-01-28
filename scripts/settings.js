@@ -6,7 +6,7 @@ const SettingsManager = {
     
     const shortcuts = {
       'eu': 'EU',
-      'europe-other': 'Other Europe',
+      'europe-other': 'Other EU',
       'asia': 'Asia',
       'americas': 'Americas',
       'africa': 'Africa',

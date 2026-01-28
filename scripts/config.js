@@ -35,7 +35,7 @@ const VAT_CONFIG = {
     },
     {
       id: 'europe-other',
-      name: 'Other Europe',
+      name: 'Other EU',
       countries: [
         { code: 'AL', name: 'Albania', rate: 20, currency: 'ALL' },
         { code: 'AD', name: 'Andorra', rate: 4.5, currency: '€' },

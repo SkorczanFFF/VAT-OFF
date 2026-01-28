@@ -1,7 +1,7 @@
 
 .vat-page--options {
   font-family: 'Space Grotesk', Arial, sans-serif;
-  max-width: 460px;
+  max-width: 500px;
   margin: 0 auto;
   background-color: var(--vat-stellar);
   color: var(--vat-text);
@@ -71,7 +71,6 @@
 }
 
 .vat-button--detect {
-  background-color: var(--vat-midnight);
   border: 2px solid var(--vat-primary);
   color: var(--vat-text);
   padding: 8px;
@@ -85,7 +84,6 @@
 }
 
 .vat-button--detect:hover {
-  background-color: var(--vat-primary);
   border-color: var(--vat-secondary);
 }
 
