@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const calculatorVatRate = document.getElementById('calculatorVatRate');
   const calculatorResultLabel = document.getElementById('calculatorResultLabel');
   const calculatorResultValue = document.getElementById('calculatorResultValue');
+  const calculatorResultVat = document.getElementById('calculatorResultVat');
 
   let isEnabled = false;
   let saveTimeout = null;
@@ -23,14 +24,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
   SettingsManager.populateRegionSelect(vatRegionSelect, true);
   
-  vatRegionSelect.value = 'eu';
-  SettingsManager.populateCountrySelect(vatRateSelect, 'eu');
+  const defaultRegion = SettingsManager.detectDefaultRegion();
+  vatRegionSelect.value = defaultRegion;
+  SettingsManager.populateCountrySelect(vatRateSelect, defaultRegion);
   
-  if (vatRateSelect.options.length > 0) {
+  const defaultCountryCode = SettingsManager.detectDefaultCountryCode();
+  const hasDefaultCountry = Array.from(vatRateSelect.options).some(opt => opt.value === defaultCountryCode);
+  if (hasDefaultCountry) {
+    vatRateSelect.value = defaultCountryCode;
+  } else if (vatRateSelect.options.length > 0) {
     vatRateSelect.value = vatRateSelect.options[0].value;
   }
   
   loadSettings();
+
+  initSectionDropdowns();
 
   vatRegionSelect.addEventListener('change', handleRegionChange);
   vatRateSelect.addEventListener('change', handleVatRateChange);
@@ -49,6 +57,125 @@ document.addEventListener('DOMContentLoaded', function() {
   if (calculatorVatRate) {
     calculatorVatRate.addEventListener('input', updateCalculator);
   }
+  function initSectionDropdowns() {
+    const STORAGE_KEY = 'popupSections';
+    let lastSavedStateJson = '';
+    let dirty = false;
+    let writeVersion = 0;
+
+    function getSectionState() {
+      const state = {};
+      document.querySelectorAll('.vat-section[id]').forEach(function(section) {
+        state[section.id] = section.classList.contains('vat-section--collapsed');
+      });
+      return state;
+    }
+
+    function persistSectionState(state) {
+      if (!state || Object.keys(state).length === 0) return;
+      const nextJson = JSON.stringify(state);
+      if (nextJson === lastSavedStateJson) return;
+
+      lastSavedStateJson = nextJson;
+      dirty = true;
+      writeVersion += 1;
+      const thisWriteVersion = writeVersion;
+
+      chrome.storage.local.set({ [STORAGE_KEY]: state }, function() {
+        if (chrome.runtime.lastError) {
+          ErrorHandler.storage('Failed to save popup section state', chrome.runtime.lastError);
+          return;
+        }
+        // Only clear dirty if this was the most recent write.
+        if (thisWriteVersion === writeVersion) {
+          dirty = false;
+        }
+      });
+    }
+
+    function saveSectionStatesIfChanged() {
+      persistSectionState(getSectionState());
+    }
+
+    function bestEffortSaveOnClose() {
+      if (!dirty) return;
+      saveSectionStatesIfChanged();
+    }
+
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden') {
+        bestEffortSaveOnClose();
+      }
+    });
+
+    window.addEventListener('pagehide', function() {
+      bestEffortSaveOnClose();
+    });
+
+    chrome.storage.local.get([STORAGE_KEY], function(result) {
+      if (chrome.runtime.lastError) {
+        ErrorHandler.storage('Failed to load popup section state', chrome.runtime.lastError);
+      }
+      const saved = result[STORAGE_KEY] || {};
+      document.querySelectorAll('.vat-section[id]').forEach(function(section) {
+        if (saved[section.id]) {
+          section.classList.add('vat-section--collapsed');
+          var h = section.querySelector('.vat-section-header');
+          if (h) h.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Seed lastSavedStateJson from the effective state after restore,
+      // so we don't write again unless something actually changes.
+      lastSavedStateJson = JSON.stringify(getSectionState());
+      dirty = false;
+
+      var container = document.querySelector('.vat-container--popup');
+      if (container) {
+        // Force a reflow to ensure styles are applied before removing loading class
+        // This prevents transitions from firing during initial render
+        container.offsetHeight;
+        requestAnimationFrame(function() {
+          container.classList.remove('vat-popup-loading-sections');
+        });
+      }
+
+      const headers = document.querySelectorAll('.vat-section-header');
+      headers.forEach(function(header) {
+        const section = header.closest('.vat-section');
+        const body = section && section.querySelector('.vat-section-body');
+        if (!section || !body) return;
+
+        function toggle() {
+          const wasCollapsed = section.classList.contains('vat-section--collapsed');
+          const isCollapsed = section.classList.toggle('vat-section--collapsed');
+          header.setAttribute('aria-expanded', !isCollapsed);
+          saveSectionStatesIfChanged();
+          
+          // Smooth scroll into view when opening
+          if (wasCollapsed && !isCollapsed) {
+            requestAnimationFrame(function() {
+              requestAnimationFrame(function() {
+                header.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+              });
+            });
+          }
+        }
+
+        header.addEventListener('click', function() {
+          toggle();
+          header.blur();
+        });
+        header.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      });
+    });
+  }
+
   function handleRegionChange() {
     const regionId = vatRegionSelect.value;
     SettingsManager.populateCountrySelect(vatRateSelect, regionId);
@@ -113,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.sync.set({ enabled: newEnabled }, function() {
       if (chrome.runtime.lastError) {
         ErrorHandler.storage('Failed to save enabled state', chrome.runtime.lastError);
-        showError('Failed to save settings. Please try again.');
+        showError('Failed to save. Try again.');
         return;
       }
       
@@ -192,20 +319,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (calculatorBruttoMode.checked) {
-      calculatorResultLabel.textContent = 'NETTO:';
+      calculatorResultLabel.textContent = 'NET';
       if (amount <= 0 || vatRate <= 0) {
-        calculatorResultValue.textContent = '0.00 ' + currency;
+        calculatorResultValue.textContent = '0.00' + currency;
+        calculatorResultVat.textContent = '';
       } else {
         const netto = amount / (1 + vatRate / 100);
-        calculatorResultValue.textContent = netto.toFixed(2) + ' ' + currency;
+        const vatAmount = amount - netto;
+        calculatorResultValue.innerHTML = netto.toFixed(2) + currency + ' <span class="vat-calculator-result-vat">(VAT: ' + vatAmount.toFixed(2) + currency + ')</span>';
+        calculatorResultVat.textContent = '';
       }
     } else {
-      calculatorResultLabel.textContent = 'BRUTTO:';
+      calculatorResultLabel.textContent = 'GROSS';
       if (amount <= 0 || vatRate <= 0) {
-        calculatorResultValue.textContent = '0.00 ' + currency;
+        calculatorResultValue.textContent = '0.00' + currency;
+        calculatorResultVat.textContent = '';
       } else {
         const brutto = amount * (1 + vatRate / 100);
-        calculatorResultValue.textContent = brutto.toFixed(2) + ' ' + currency;
+        const vatAmount = brutto - amount;
+        calculatorResultValue.innerHTML = brutto.toFixed(2) + currency + ' <span class="vat-calculator-result-vat">(VAT: ' + vatAmount.toFixed(2) + currency + ')</span>';
+        calculatorResultVat.textContent = '';
       }
     }
   }
@@ -222,6 +355,10 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         vatCalculator.style.display = 'none';
       }
+      // Update status indicator to reflect calculator visibility
+      if (!isEnabled) {
+        updateStatusIndicator(false);
+      }
     });
   }
 
@@ -231,20 +368,21 @@ document.addEventListener('DOMContentLoaded', function() {
       ? 'vat-status-indicator vat-status-indicator--enabled' 
       : 'vat-status-indicator vat-status-indicator--disabled';
     
-    const statusText = document.createTextNode(enabled ? 'WEB ENABLED' : 'WEB DISABLED (CALCULATOR ONLY)');
+    const calculatorVisible = vatCalculator && vatCalculator.style.display !== 'none';
+    const statusText = document.createTextNode(enabled ? 'ENABLED' : (calculatorVisible ? 'OFF (calculator only)' : 'OFF'));
     statusIndicator.appendChild(statusText);
     
     const dot = document.createElement('span');
     dot.className = 'vat-status-dot';
     statusIndicator.appendChild(dot);
     
-    toggleBtn.textContent = enabled ? 'Disable Extension' : 'Enable Extension';
+    toggleBtn.textContent = enabled ? 'Disable' : 'Enable';
   }
 
   function loadSettings() {
     SettingsManager.loadSettings(['vatRegion', 'vatRate', 'customRate', 'customCurrency', 'enabled', 'showCalculator'], (result, error) => {
       if (error) {
-        showError('Failed to load settings. Please try again.');
+        showError('Failed to load settings. Try again.');
         return;
       }
       
@@ -252,14 +390,21 @@ document.addEventListener('DOMContentLoaded', function() {
         vatRegionSelect.value = result.vatRegion;
         SettingsManager.populateCountrySelect(vatRateSelect, result.vatRegion);
       } else {
-        vatRegionSelect.value = 'eu';
-        SettingsManager.populateCountrySelect(vatRateSelect, 'eu');
+        const fallbackRegion = SettingsManager.detectDefaultRegion();
+        vatRegionSelect.value = fallbackRegion;
+        SettingsManager.populateCountrySelect(vatRateSelect, fallbackRegion);
       }
       
       if (result.vatRate) {
         vatRateSelect.value = result.vatRate;
-      } else if (vatRateSelect.options.length > 0) {
-        vatRateSelect.value = vatRateSelect.options[0].value;
+      } else {
+        const fallbackCountryCode = SettingsManager.detectDefaultCountryCode();
+        const hasFallbackCountry = Array.from(vatRateSelect.options).some(opt => opt.value === fallbackCountryCode);
+        if (hasFallbackCountry) {
+          vatRateSelect.value = fallbackCountryCode;
+        } else if (vatRateSelect.options.length > 0) {
+          vatRateSelect.value = vatRateSelect.options[0].value;
+        }
       }
       if (result.customRate) {
         customRateInput.value = result.customRate;
@@ -309,10 +454,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     SettingsManager.saveSettings(prepared.settings, (error) => {
       if (error) {
-        showError('Failed to save settings. Please try again.');
+        showError('Failed to save. Try again.');
       } else {
         if (showSuccessMessage) {
-          showSuccess('SETTINGS SAVED!');
+          showSuccess('Settings saved');
         }
         if (onSuccessCallback) {
           onSuccessCallback();

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>VAT-OFF - Settings</title>
+  <title>VAT-OFF — Settings</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,41 +16,54 @@
       <h1 class="vat-title">VAT-OFF Settings</h1>
       
       <div class="vat-section">
-        <h2 class="vat-section-title">VAT Rate Configuration</h2>
+        <h2 class="vat-section-title">VAT rate &amp; country</h2>
         
         <div class="vat-form-group">
           <div class="vat-region-country-row">
             <div class="vat-region-wrapper">
-              <label class="vat-label" for="vatRegion">Region:</label>
+              <label class="vat-label" for="vatRegion">Region</label>
               <select class="vat-form-control" id="vatRegion">
               </select>
             </div>
             <div class="vat-country-wrapper">
-              <label class="vat-label" for="vatRate">Country:</label>
+              <label class="vat-label" for="vatRate">Country</label>
               <select class="vat-form-control" id="vatRate" disabled>
               </select>
             </div>
+            <div class="vat-detect-wrapper">
+              <label class="vat-label" for="detectLanguageBtn">&nbsp;</label>
+              <button class="vat-button vat-button--detect" id="detectLanguageBtn" type="button" title="Re-detect system language and region">
+                ↻
+              </button>
+            </div>
           </div>
-          <div class="vat-help-text">Select a region to see available countries, then choose your country.</div>
+          <div class="vat-help-text">Choose a region, then select your country.</div>
         </div>
         
         <div class="vat-custom-rate" id="customRateDiv" style="display: none;">
-          <label class="vat-label">Custom VAT Rate:</label>
           <div class="custom-rate-row">
-            <input class="vat-form-control custom-rate-input" type="number" id="customRate" min="1" max="100" step="1" placeholder="e.g., 23">
-            <span class="custom-rate-percent">%</span>
-            <input class="vat-form-control custom-currency-input" type="text" id="customCurrency" maxlength="4" placeholder="€">
+            <div class="custom-rate-wrapper">
+              <label class="vat-label" for="customRate">Custom VAT rate</label>
+              <div class="custom-rate-input-group">
+                <input class="vat-form-control custom-rate-input" type="number" id="customRate" min="1" max="100" step="1" placeholder="e.g., 23">
+                <span class="custom-rate-percent">%</span>
+              </div>
+            </div>
+            <div class="custom-currency-wrapper">
+              <label class="vat-label" for="customCurrency">Currency</label>
+              <input class="vat-form-control custom-currency-input" type="text" id="customCurrency" maxlength="4" placeholder="€">
+            </div>
           </div>
-          <div class="vat-help-text">Enter VAT rate (1-100%) and currency symbol (max 4 chars).</div>
+          <div class="vat-help-text">VAT rate (1–100%) and currency symbol (up to 4 characters).</div>
         </div>
         
         <div class="vat-preview" id="preview">
-          <div class="vat-preview-label">Tooltip Preview</div>
+          <div class="vat-preview-label">Preview</div>
           <div class="vat-preview-scene">
             <span class="vat-preview-price" id="previewOriginalPrice">199,99 zł</span>
             <div class="vat-preview-tooltip">
               <div class="vat-tooltip-content">
-                <div class="vat-tooltip-title">Without VAT</div>
+                <div class="vat-tooltip-title">Excl. VAT</div>
                 <div class="vat-tooltip-price" id="previewPrice">162.60 zł</div>
                 <div class="vat-tooltip-vat" id="previewVatLine">VAT 23%: 37.39 zł</div>
               </div>
@@ -60,13 +73,13 @@
       </div>
       
       <div class="vat-section">
-        <h2 class="vat-section-title">Extension Behavior</h2>
+        <h2 class="vat-section-title">Extension options</h2>
         <div class="vat-form-group">
           <label class="vat-label">
             <input class="vat-checkbox" type="checkbox" id="showCalculator">
             Show calculator in popup
           </label>
-          <div class="vat-help-text" style="padding-left: 24px;">Display a VAT calculator in the popup for quick conversions between brutto and netto amounts.</div>
+          <div class="vat-help-text" style="padding-left: 20px;">Show a VAT calculator for quick gross/net conversion.</div>
         </div>
         
         <div class="vat-form-group">
@@ -74,19 +87,19 @@
             <input class="vat-checkbox" type="checkbox" id="showVATBreakdown" checked>
             Show VAT breakdown in tooltip
           </label>
-          <div class="vat-help-text" style="padding-left: 24px;">Display the VAT amount in the hover tooltip.</div>
+          <div class="vat-help-text" style="padding-left: 20px;">Show the VAT amount in the hover tooltip.</div>
         </div>
         
         <div class="vat-form-group">
           <label class="vat-label">
             <input class="vat-checkbox" type="checkbox" id="watchChanges" checked>
-            Watch for dynamic content changes
+            Re-scan when page content changes
           </label>
-          <div class="vat-help-text" style="padding-left: 24px;">Monitor the page for new content and scan for additional prices.</div>
+          <div class="vat-help-text" style="padding-left: 20px;">Scan for new prices when the page loads more content (e.g. infinite scroll).</div>
         </div>
       </div>
       
-      <button class="vat-button--save" id="saveButton">SAVE SETTINGS</button>
+      <button class="vat-button--save" id="saveButton">Save settings</button>
       <div class="vat-status" id="status" style="display: none;"></div>
     </div>
   </div>

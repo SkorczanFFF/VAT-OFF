@@ -4,6 +4,7 @@
   font-family: 'Space Grotesk', Arial, sans-serif;
   background: linear-gradient(270deg, var(--vat-secondary), var(--vat-primary));
   color: var(--vat-text);
+  scroll-behavior: smooth;
 }
 
 .vat-container--popup {
@@ -30,12 +31,31 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+  border-radius: 2px;
+  transition: background-color 0.15s ease, margin-bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vat-section--collapsed .vat-section-header {
+  margin-bottom: 0;
+}
+
+.vat-section-header:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.vat-section-header:focus {
+  outline: 2px solid var(--vat-primary);
+  outline-offset: 2px;
 }
 
 .vat-section-header-icon {
   width: 16px;
   height: 16px;
   opacity: 0.9;
+  flex-shrink: 0;
 }
 
 .vat-section-header-title {
@@ -45,6 +65,52 @@
   color: var(--vat-text);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  flex: 1;
+  text-align: left;
+}
+
+.vat-section-header-chevron {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 6px solid var(--vat-text);
+  flex-shrink: 0;
+  margin-left: 4px;
+  transition: transform 0.25s ease;
+}
+
+.vat-section--collapsed .vat-section-header-chevron {
+  transform: rotate(180deg);
+}
+
+.vat-section-body {
+  overflow: hidden;
+  max-height: 800px;
+  opacity: 1;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-out;
+}
+
+.vat-section--collapsed .vat-section-body {
+  max-height: 0;
+  margin-bottom: 0;
+  opacity: 0;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-in;
+}
+
+.vat-popup-loading-sections .vat-section-body {
+  max-height: 0 !important;
+  overflow: hidden;
+  opacity: 0;
+  transition: none !important;
+}
+
+.vat-popup-loading-sections .vat-section-header {
+  transition: background-color 0.15s ease, margin-bottom 0s !important;
+}
+
+.vat-popup-loading-sections .vat-section-header-chevron {
+  transition: none !important;
 }
 
 .vat-calculator {
@@ -99,11 +165,23 @@
   color: var(--vat-text);
 }
 
+.vat-calculator-result-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
 .vat-calculator-result-value {
   font-size: 18px;
   font-weight: 700;
   color: var(--vat-secondary);
   filter: brightness(1.5);
+}
+
+.vat-calculator-result-value .vat-calculator-result-vat {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--vat-text-disabled);
 }
 
 .vat-gradient-line {
@@ -113,6 +191,10 @@
   border: none;
   margin: 10px 0 12px 0;
   border-radius: 1px;
+}
+
+.vat-gradient-line:last-child {
+  margin-bottom: 0;
 }
 
 .vat-rate {
@@ -199,7 +281,7 @@
 .vat-buttons-row {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  /* margin-top: 10px; */
 }
 
 #optionsBtn {

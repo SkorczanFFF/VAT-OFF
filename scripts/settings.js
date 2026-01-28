@@ -6,11 +6,11 @@ const SettingsManager = {
     
     const shortcuts = {
       'eu': 'EU',
-      'europe-other': 'Other EU',
+      'europe-other': 'Other Europe',
       'asia': 'Asia',
       'americas': 'Americas',
       'africa': 'Africa',
-      'middle-east': 'M. East',
+      'middle-east': 'Mid. East',
       'oceania': 'Oceania'
     };
     
@@ -73,7 +73,7 @@ const SettingsManager = {
     if (includeCustom) {
       const customOption = document.createElement('option');
       customOption.value = 'custom';
-      customOption.textContent = 'Custom Rate';
+      customOption.textContent = 'Custom rate';
       selectElement.appendChild(customOption);
     }
     
@@ -96,25 +96,25 @@ const SettingsManager = {
     const trimmed = String(rateValue).trim();
     
     if (!trimmed) {
-      return { valid: false, error: 'VAT rate is required' };
+      return { valid: false, error: 'VAT rate is required.' };
     }
     
     if (!/^\d+$/.test(trimmed)) {
-      return { valid: false, error: 'VAT rate must be a whole number (e.g., 15, 23, 25)' };
+      return { valid: false, error: 'VAT rate must be a whole number (e.g. 15, 23, 25).' };
     }
     
     const rate = parseInt(trimmed, 10);
     
     if (isNaN(rate)) {
-      return { valid: false, error: 'VAT rate must be a valid number' };
+      return { valid: false, error: 'VAT rate must be a valid number.' };
     }
     
     if (rate <= 0) {
-      return { valid: false, error: 'VAT rate must be at least 1%' };
+      return { valid: false, error: 'VAT rate must be at least 1%.' };
     }
     
     if (rate > 100) {
-      return { valid: false, error: 'VAT rate cannot exceed 100%' };
+      return { valid: false, error: 'VAT rate cannot exceed 100%.' };
     }
     
     return { valid: true, value: rate, sanitized: rate.toString() };

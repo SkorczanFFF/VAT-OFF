@@ -57,6 +57,47 @@
   min-width: 0;
 }
 
+.vat-detect-wrapper {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.vat-detect-wrapper .vat-label {
+  display: block;
+  margin-bottom: 4px;
+  visibility: hidden;
+}
+
+.vat-button--detect {
+  background-color: var(--vat-midnight);
+  border: 2px solid var(--vat-primary);
+  color: var(--vat-text);
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  min-width: 40px;
+  height: 36px;
+}
+
+.vat-button--detect:hover {
+  background-color: var(--vat-primary);
+  border-color: var(--vat-secondary);
+}
+
+.vat-button--detect:active {
+  filter: brightness(0.9);
+}
+
+.vat-button--detect {
+  font-size: 18px;
+  line-height: 1;
+}
+
 .vat-region-wrapper .vat-label,
 .vat-country-wrapper .vat-label {
   display: block;

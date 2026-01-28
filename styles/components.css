@@ -11,8 +11,26 @@
 
 .custom-rate-row {
   display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.custom-rate-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.custom-rate-wrapper .vat-label {
+  font-size: 11px;
+  margin-bottom: 3px;
+  display: block;
+}
+
+.custom-rate-input-group {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .custom-rate-input {
@@ -22,6 +40,18 @@
 .custom-rate-percent {
   color: var(--vat-text);
   font-weight: bold;
+}
+
+.custom-currency-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+}
+
+.custom-currency-wrapper .vat-label {
+  font-size: 11px;
+  margin-bottom: 3px;
+  display: block;
 }
 
 .custom-currency-input {

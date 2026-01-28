@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "VAT-OFF",
   "version": "1.0.0",
-  "description": "Calculate prices without VAT by hovering over price numbers on web pages",
+  "description": "Show prices excluding VAT when you hover over them on any website.",
   "permissions": [
     "storage",
     "activeTab"
@@ -17,7 +17,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "VAT-OFF Settings"
+    "default_title": "VAT-OFF"
   },
   "options_page": "options.html",
   "icons": {

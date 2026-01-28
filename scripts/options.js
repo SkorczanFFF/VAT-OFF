@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const customCurrencyInput = document.getElementById('customCurrency');
   const saveBtn = document.getElementById('saveButton');
   const statusDiv = document.getElementById('status');
+  const detectLanguageBtn = document.getElementById('detectLanguageBtn');
   const watchChangesCheckbox = document.getElementById('watchChanges');
   const showVatBreakdownCheckbox = document.getElementById('showVATBreakdown');
   const showCalculatorCheckbox = document.getElementById('showCalculator');
@@ -20,6 +21,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const defaultRegion = SettingsManager.detectDefaultRegion();
   vatRegionSelect.value = defaultRegion;
   SettingsManager.populateCountrySelect(vatRateSelect, defaultRegion);
+
+  const defaultCountryCode = SettingsManager.detectDefaultCountryCode();
+  const hasDefaultCountry = Array.from(vatRateSelect.options).some(opt => opt.value === defaultCountryCode);
+  if (hasDefaultCountry) {
+    vatRateSelect.value = defaultCountryCode;
+  } else if (vatRateSelect.options.length > 0) {
+    vatRateSelect.value = vatRateSelect.options[0].value;
+  }
   
   loadSettings();
 
@@ -30,6 +39,26 @@ document.addEventListener('DOMContentLoaded', function() {
   customCurrencyInput.addEventListener('input', updatePreview);
   showVatBreakdownCheckbox.addEventListener('change', updatePreview);
   saveBtn.addEventListener('click', handleSaveClick);
+  detectLanguageBtn.addEventListener('click', handleDetectLanguage);
+  function handleDetectLanguage() {
+    const detectedRegion = SettingsManager.detectDefaultRegion();
+    const detectedCountryCode = SettingsManager.detectDefaultCountryCode();
+    
+    vatRegionSelect.value = detectedRegion;
+    SettingsManager.populateCountrySelect(vatRateSelect, detectedRegion);
+    
+    const hasDetectedCountry = Array.from(vatRateSelect.options).some(opt => opt.value === detectedCountryCode);
+    if (hasDetectedCountry) {
+      vatRateSelect.value = detectedCountryCode;
+    } else if (vatRateSelect.options.length > 0) {
+      vatRateSelect.value = vatRateSelect.options[0].value;
+    }
+    
+    updateCustomRateVisibility();
+    updatePreview();
+    showStatus('Language and region detected', 'success');
+  }
+
   function handleRegionChange() {
     const regionId = vatRegionSelect.value;
     SettingsManager.populateCountrySelect(vatRateSelect, regionId);
@@ -119,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     SettingsManager.loadSettings(keys, (result, error) => {
       if (error) {
-        showStatus('Failed to load settings', 'error');
+        showStatus('Failed to load settings. Try again.', 'error');
         return;
       }
       
@@ -134,6 +163,14 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (result.vatRate) {
         vatRateSelect.value = result.vatRate;
+      } else {
+        const fallbackCountryCode = SettingsManager.detectDefaultCountryCode();
+        const hasFallbackCountry = Array.from(vatRateSelect.options).some(opt => opt.value === fallbackCountryCode);
+        if (hasFallbackCountry) {
+          vatRateSelect.value = fallbackCountryCode;
+        } else if (vatRateSelect.options.length > 0) {
+          vatRateSelect.value = vatRateSelect.options[0].value;
+        }
       }
       if (result.customRate) {
         customRateInput.value = result.customRate;
@@ -181,11 +218,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     SettingsManager.saveSettings(prepared.settings, (error) => {
       if (error) {
-        showStatus('Failed to save settings', 'error');
+        showStatus('Failed to save. Try again.', 'error');
         return;
       }
       
-      showStatus('Settings saved successfully!', 'success');
+      showStatus('Settings saved', 'success');
     });
   }
 });

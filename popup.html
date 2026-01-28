@@ -10,32 +10,34 @@
   <link rel="stylesheet" href="styles/popup.css">
 </head>
 <body class="vat-page--popup">
-  <div class="vat-container--popup">
+  <div class="vat-container--popup vat-popup-loading-sections">
     <div class="vat-header">
       <h2>VAT-OFF</h2>
       <div class="vat-status-indicator vat-status-indicator--disabled" id="statusIndicator">
-        Extension is disabled<span class="vat-status-dot"></span>
+        OFF<span class="vat-status-dot"></span>
       </div>
     </div>
     <div class="vat-gradient-line"></div>
-    <div class="vat-calculator" id="vatCalculator" style="display: none;">
-      <div class="vat-section-header">
-        <img src="icons/calculator.svg" alt="Calculator" class="vat-section-header-icon">
+    <div class="vat-calculator vat-section" id="vatCalculator" style="display: none;">
+      <div class="vat-section-header" tabindex="0" role="button" aria-expanded="true" aria-controls="vatCalculatorBody" id="vatCalculatorHeader">
+        <img src="icons/calculator.svg" alt="" class="vat-section-header-icon">
         <h3 class="vat-section-header-title">Calculator</h3>
+        <span class="vat-section-header-chevron" aria-hidden="true"></span>
       </div>
+      <div class="vat-section-body" id="vatCalculatorBody">
       <div class="vat-calculator-mode">
         <label class="vat-label">
           <input class="vat-checkbox" type="checkbox" id="calculatorBruttoMode">
-          Calculate from brutto (gross)
+          Calculate from gross
         </label>
       </div>
       <div class="vat-calculator-inputs">
         <div class="vat-calculator-amount-wrapper">
-          <label class="vat-label" for="calculatorAmount">Amount:</label>
+          <label class="vat-label" for="calculatorAmount">Amount</label>
           <input class="vat-form-control vat-calculator-amount" type="number" id="calculatorAmount" step="0.01" placeholder="0.00" value="1.29">
         </div>
         <div class="vat-calculator-vat-wrapper">
-          <label class="vat-label" for="calculatorVatRate">VAT:</label>
+          <label class="vat-label" for="calculatorVatRate">VAT rate</label>
           <div class="vat-calculator-vat-input-wrapper">
             <input class="vat-form-control vat-calculator-vat" type="number" id="calculatorVatRate" min="1" max="100" step="0.1" placeholder="23">
             <span class="vat-calculator-percent">%</span>
@@ -43,42 +45,56 @@
         </div>
       </div>
       <div class="vat-calculator-result">
-        <div class="vat-calculator-result-label" id="calculatorResultLabel">Netto:</div>
-        <div class="vat-calculator-result-value" id="calculatorResultValue">0.00</div>
+        <div class="vat-calculator-result-label" id="calculatorResultLabel">NET</div>
+        <div class="vat-calculator-result-right">
+          <div class="vat-calculator-result-value" id="calculatorResultValue">0.00</div>
+          <div class="vat-calculator-result-vat" id="calculatorResultVat"></div>
+        </div>
       </div>
       <div class="vat-gradient-line"></div>
-    </div>
-    <div class="vat-rate">
-      <div class="vat-section-header">
-        <img src="icons/gauge-high.svg" alt="Settings" class="vat-section-header-icon">
-        <h3 class="vat-section-header-title">Quick Settings</h3>
       </div>
+    </div>
+    <div class="vat-rate vat-section" id="vatRateSection">
+      <div class="vat-section-header" tabindex="0" role="button" aria-expanded="true" aria-controls="vatRateBody" id="vatRateHeader">
+        <img src="icons/gauge-high.svg" alt="" class="vat-section-header-icon">
+        <h3 class="vat-section-header-title">Quick Settings</h3>
+        <span class="vat-section-header-chevron" aria-hidden="true"></span>
+      </div>
+      <div class="vat-section-body" id="vatRateBody">
       <div class="vat-rate-selectors">
         <div class="vat-region-wrapper">
-          <label class="vat-label" for="vatRegion">Region:</label>
+          <label class="vat-label" for="vatRegion">Region</label>
           <select class="vat-form-control vat-region-select" id="vatRegion">
           </select>
         </div>
         <div class="vat-country-wrapper">
-          <label class="vat-label" for="vatRate">Country:</label>
+          <label class="vat-label" for="vatRate">Country</label>
           <select class="vat-form-control vat-country-select" id="vatRate" disabled>
           </select>
         </div>
       </div>
       
       <div class="vat-custom-rate" id="customRateDiv" style="display: none;">
-        <label class="vat-label">Custom VAT Rate:</label>
         <div class="custom-rate-row">
-          <input class="vat-form-control custom-rate-input" type="number" id="customRate" min="1" max="100" step="1" placeholder="23">
-          <span class="custom-rate-percent">%</span>
-          <input class="vat-form-control custom-currency-input" type="text" id="customCurrency" maxlength="4" placeholder="€">
+          <div class="custom-rate-wrapper">
+            <label class="vat-label" for="customRate">Custom VAT rate</label>
+            <div class="custom-rate-input-group">
+              <input class="vat-form-control custom-rate-input" type="number" id="customRate" min="1" max="100" step="1" placeholder="23">
+              <span class="custom-rate-percent">%</span>
+            </div>
+          </div>
+          <div class="custom-currency-wrapper">
+            <label class="vat-label" for="customCurrency">Currency</label>
+            <input class="vat-form-control custom-currency-input" type="text" id="customCurrency" maxlength="4" placeholder="€">
+          </div>
         </div>
-        <button class="vat-button vat-button--save-custom" id="saveCustomRateBtn">SAVE SETTINGS</button>
+        <button class="vat-button vat-button--save-custom" id="saveCustomRateBtn">Save settings</button>
+      </div>
       </div>
     </div>
     
     <div class="vat-buttons-row">
-      <button class="vat-button" id="toggleBtn">Enable Extension</button>
+      <button class="vat-button" id="toggleBtn">Enable</button>
       <button class="vat-button" id="optionsBtn">
         <img src="icons/settings.svg" alt="Settings" class="vat-button-icon">
       </button>

@@ -115,12 +115,6 @@ class VATCalculator {
         ErrorHandler.runtime('Error handling storage change', error);
       }
     });
-
-    this.scanForPrices();
-    
-    if (this.watchChanges) {
-      this.observeChanges();
-    }
   }
 
   loadSettings() {
@@ -156,6 +150,11 @@ class VATCalculator {
         this.showVATBreakdown = result.showVATBreakdown;
       }
       this.updatePriceElements();
+      this.scanForPrices();
+      
+      if (this.watchChanges) {
+        this.observeChanges();
+      }
     });
   }
 
@@ -633,7 +632,7 @@ class VATCalculator {
     
     const title = document.createElement('div');
     title.className = 'vat-tooltip-title';
-    title.textContent = 'Without VAT';
+    title.textContent = 'Excl. VAT';
     content.appendChild(title);
     
     const priceDiv = document.createElement('div');
