@@ -7,12 +7,16 @@ A powerful Chrome extension that automatically detects prices on web pages and d
 ### Extension Popup
 The compact popup provides quick access to enable/disable the extension, change VAT settings, and use the built-in calculator.
 
-![Extension Popup](screens/popup.png)
+<div align="center">
+  <img src="screens/popup.png" alt="Extension Popup" />
+</div>
 
 ### Settings Page
 The comprehensive settings page allows you to configure all extension options, select countries, set custom VAT rates, and preview tooltip appearance.
 
-![Settings Page](screens/settings.png)
+<div align="center">
+  <img src="screens/settings.png" alt="Settings Page" />
+</div>
 
 ## 🌟 Features
 
@@ -135,7 +139,7 @@ The comprehensive settings page allows you to configure all extension options, s
 
 1. **Click the Extension Icon**
    - Click the VAT-OFF icon in your browser toolbar to open the popup
-   - ![Popup interface](screens/popup.png)
+   - <div align="center"><img src="screens/popup.png" alt="Popup interface" /></div>
 
 2. **Select Your Country** (or use auto-detection)
    - The extension automatically detects your region based on system language
@@ -193,7 +197,9 @@ The comprehensive settings page allows you to configure all extension options, s
 
 Access the full options page by right-clicking the extension icon and selecting "Options":
 
-![Settings interface](screens/settings.png)
+<div align="center">
+  <img src="screens/settings.png" alt="Settings interface" />
+</div>
 
 ### VAT Rate & Country
 - **Region Selection**: Choose from 7 regions (EU, Other Europe, Asia, Americas, Africa, Middle East, Oceania)
