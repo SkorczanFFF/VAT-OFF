@@ -1,3 +1,12 @@
+const CONSTANTS = {
+  MAX_SCAN_NODES: 5000,
+  MAX_PRICE_ELEMENTS: 500,
+  RESCAN_DEBOUNCE_MS: 1000,
+  CUSTOM_RATE_VALUE: 'custom',
+  DEFAULT_CURRENCY: '€',
+  DEFAULT_VAT_RATE: 20
+};
+
 const VAT_CONFIG = {
   regions: [
     {

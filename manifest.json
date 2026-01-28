@@ -11,7 +11,7 @@
     {
       "matches": ["http://*/*", "https://*/*"],
       "js": ["scripts/error-handler.js", "scripts/config.js", "scripts/content.js"],
-      "css": ["styles/variables.css", "styles/components.css", "styles/content.css"],
+      "css": ["styles/fonts.css", "styles/variables.css", "styles/components.css", "styles/content.css"],
       "run_at": "document_idle"
     }
   ],

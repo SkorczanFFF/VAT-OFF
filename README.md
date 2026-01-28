@@ -263,8 +263,11 @@ VAT-OFF/
 │   ├── variables.css          # CSS variables and form controls
 │   ├── components.css         # Shared component styles
 │   ├── content.css            # Content script styles (tooltips)
+│   ├── fonts.css              # Font face declarations for bundled fonts
 │   ├── options.css            # Options page styles
 │   └── popup.css              # Popup styles
+├── fonts/                     # Bundled font files (Space Grotesk)
+│   └── static/                # Font weight variants (TTF format)
 └── icons/
     ├── icon16.png             # Extension icon (16x16)
     ├── icon48.png             # Extension icon (48x48)
@@ -294,7 +297,7 @@ VAT-OFF/
 - **Local Storage**: Settings are stored locally using Chrome's sync storage (encrypted by Chrome)
 - **No Tracking**: No analytics, no telemetry, no tracking of any kind
 - **Open Source**: Code is open for inspection
-- **No External Requests**: Only loads Google Fonts (Space Grotesk) for UI styling
+- **No External Requests**: All fonts (Space Grotesk) are bundled locally with the extension - no external requests
 
 ## 🌍 Supported Countries
 

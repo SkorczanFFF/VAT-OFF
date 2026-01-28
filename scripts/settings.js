@@ -1,6 +1,7 @@
 const SettingsManager = {
   populateRegionSelect(selectElement, useShortcuts = false) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return;
+    const regions = VAT_CONFIG?.regions ?? [];
+    if (regions.length === 0) return;
     
     selectElement.innerHTML = '';
     
@@ -14,7 +15,7 @@ const SettingsManager = {
       'oceania': 'Oceania'
     };
     
-    VAT_CONFIG.regions.forEach(region => {
+    regions.forEach(region => {
       const option = document.createElement('option');
       option.value = region.id;
       option.textContent = useShortcuts && shortcuts[region.id] ? shortcuts[region.id] : region.name;
@@ -23,20 +24,19 @@ const SettingsManager = {
   },
 
   detectDefaultRegion() {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return 'eu';
+    const regions = VAT_CONFIG?.regions ?? [];
+    if (regions.length === 0) return 'eu';
     
-    const locale = navigator.language || navigator.userLanguage || 'en-US';
-    const countryCode = locale.split('-')[1]?.toUpperCase();
+    const { language, country } = this.parseLocale();
     
-    if (countryCode) {
-      const regionId = this.getRegionByCountryCode(countryCode);
+    if (country) {
+      const regionId = this.getRegionByCountryCode(country);
       if (regionId) {
         return regionId;
       }
     }
     
-    const languageCode = locale.split('-')[0].toLowerCase();
-    const mappedCountry = VAT_CONFIG.languageToCountry[languageCode];
+    const mappedCountry = VAT_CONFIG?.languageToCountry?.[language];
     if (mappedCountry) {
       const regionId = this.getRegionByCountryCode(mappedCountry);
       if (regionId) {
@@ -48,7 +48,8 @@ const SettingsManager = {
   },
 
   populateCountrySelect(selectElement, regionId, includeCustom = true) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return;
+    const regions = VAT_CONFIG?.regions ?? [];
+    if (regions.length === 0) return;
     
     selectElement.innerHTML = '';
     
@@ -57,7 +58,7 @@ const SettingsManager = {
       return;
     }
     
-    const region = VAT_CONFIG.regions.find(r => r.id === regionId);
+    const region = regions.find(r => r.id === regionId);
     if (!region) {
       selectElement.disabled = true;
       return;
@@ -72,7 +73,7 @@ const SettingsManager = {
     
     if (includeCustom) {
       const customOption = document.createElement('option');
-      customOption.value = 'custom';
+      customOption.value = CONSTANTS.CUSTOM_RATE_VALUE;
       customOption.textContent = 'Custom rate';
       selectElement.appendChild(customOption);
     }
@@ -80,10 +81,32 @@ const SettingsManager = {
     selectElement.disabled = false;
   },
 
-  getRegionByCountryCode(countryCode) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions || !countryCode) return null;
+  parseLocale() {
+    const locale = navigator.language || navigator.userLanguage || 'en-US';
+    const [lang, country] = locale.split('-');
+    return {
+      language: lang?.toLowerCase() ?? 'en',
+      country: country?.toUpperCase() ?? 'US'
+    };
+  },
+
+  findCountry(countryCode) {
+    if (!countryCode) return null;
+    const regions = VAT_CONFIG?.regions ?? [];
     
-    for (const region of VAT_CONFIG.regions) {
+    for (const region of regions) {
+      const country = region.countries.find(c => c.code === countryCode);
+      if (country) return country;
+    }
+    return null;
+  },
+
+  getRegionByCountryCode(countryCode) {
+    if (!countryCode) return null;
+    const regions = VAT_CONFIG?.regions ?? [];
+    if (regions.length === 0) return null;
+    
+    for (const region of regions) {
       const country = region.countries.find(c => c.code === countryCode);
       if (country) {
         return region.id;
@@ -121,56 +144,39 @@ const SettingsManager = {
   },
 
   detectDefaultCountryCode() {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return 'GB';
+    const regions = VAT_CONFIG?.regions ?? [];
+    if (regions.length === 0) return 'GB';
     
-    const locale = navigator.language || navigator.userLanguage || 'en-US';
-    const languageCode = locale.split('-')[0].toLowerCase();
-    const countryCode = locale.split('-')[1]?.toUpperCase();
+    const { language, country: localeCountry } = this.parseLocale();
     
     const validCountryCodes = [];
-    VAT_CONFIG.regions.forEach(region => {
+    regions.forEach(region => {
       region.countries.forEach(country => {
         validCountryCodes.push(country.code);
       });
     });
     
-    if (countryCode && validCountryCodes.includes(countryCode)) {
-      return countryCode;
+    if (localeCountry && validCountryCodes.includes(localeCountry)) {
+      return localeCountry;
     }
     
-    return VAT_CONFIG.languageToCountry[languageCode] || 'GB';
+    return VAT_CONFIG?.languageToCountry?.[language] ?? 'GB';
   },
 
   getCountryCode(selectElement) {
     const value = selectElement.value;
-    if (value === 'custom') {
+    if (value === CONSTANTS.CUSTOM_RATE_VALUE) {
       return this.detectDefaultCountryCode();
     }
     return value || this.detectDefaultCountryCode();
   },
 
   getRate(countryCode) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions || !countryCode) return 20;
-    
-    for (const region of VAT_CONFIG.regions) {
-      const country = region.countries.find(c => c.code === countryCode);
-      if (country) {
-        return country.rate;
-      }
-    }
-    return 20;
+    return this.findCountry(countryCode)?.rate ?? CONSTANTS.DEFAULT_VAT_RATE;
   },
 
   getCurrency(countryCode) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions || !countryCode) return '€';
-    
-    for (const region of VAT_CONFIG.regions) {
-      const country = region.countries.find(c => c.code === countryCode);
-      if (country) {
-        return country.currency;
-      }
-    }
-    return '€';
+    return this.findCountry(countryCode)?.currency ?? CONSTANTS.DEFAULT_CURRENCY;
   },
 
   loadSettings(keys, callback) {
@@ -199,7 +205,7 @@ const SettingsManager = {
     let customRate = customRateValue;
     let vatRateNumber;
     
-    if (vatRateValue === 'custom') {
+    if (vatRateValue === CONSTANTS.CUSTOM_RATE_VALUE) {
       const validation = this.validateVATRate(customRate);
       if (!validation.valid) {
         return { error: validation.error };
@@ -220,5 +226,83 @@ const SettingsManager = {
       },
       sanitizedCustomRate: customRate
     };
+  },
+
+  initializeRegionCountrySelects(regionSelect, countrySelect, useShortcuts = false) {
+    this.populateRegionSelect(regionSelect, useShortcuts);
+    
+    const defaultRegion = this.detectDefaultRegion();
+    regionSelect.value = defaultRegion;
+    this.populateCountrySelect(countrySelect, defaultRegion);
+    
+    const defaultCountryCode = this.detectDefaultCountryCode();
+    const hasDefaultCountry = Array.from(countrySelect.options).some(opt => opt.value === defaultCountryCode);
+    if (hasDefaultCountry) {
+      countrySelect.value = defaultCountryCode;
+    } else if (countrySelect.options.length > 0) {
+      countrySelect.value = countrySelect.options[0].value;
+    }
+  },
+
+  applyRegionCountrySettings(regionSelect, countrySelect, savedSettings) {
+    if (savedSettings.vatRegion) {
+      regionSelect.value = savedSettings.vatRegion;
+      this.populateCountrySelect(countrySelect, savedSettings.vatRegion);
+    } else {
+      const fallbackRegion = this.detectDefaultRegion();
+      regionSelect.value = fallbackRegion;
+      this.populateCountrySelect(countrySelect, fallbackRegion);
+    }
+    
+    if (savedSettings.vatRate) {
+      countrySelect.value = savedSettings.vatRate;
+    } else {
+      const fallbackCountryCode = this.detectDefaultCountryCode();
+      const hasFallbackCountry = Array.from(countrySelect.options).some(opt => opt.value === fallbackCountryCode);
+      if (hasFallbackCountry) {
+        countrySelect.value = fallbackCountryCode;
+      } else if (countrySelect.options.length > 0) {
+        countrySelect.value = countrySelect.options[0].value;
+      }
+    }
+  },
+
+  handleRegionChange(regionSelect, countrySelect) {
+    const regionId = regionSelect.value;
+    this.populateCountrySelect(countrySelect, regionId);
+    
+    if (countrySelect.options.length > 0) {
+      countrySelect.value = countrySelect.options[0].value;
+    }
+  },
+
+  getSelectedVatRate(countrySelect, customRateInput) {
+    if (countrySelect.value === CONSTANTS.CUSTOM_RATE_VALUE) {
+      return parseFloat(customRateInput.value) || CONSTANTS.DEFAULT_VAT_RATE;
+    }
+    const countryCode = this.getCountryCode(countrySelect);
+    return this.getRate(countryCode);
+  },
+
+  getSelectedCurrency(countrySelect, customCurrencyInput) {
+    if (countrySelect.value === CONSTANTS.CUSTOM_RATE_VALUE) {
+      return customCurrencyInput.value.trim() || CONSTANTS.DEFAULT_CURRENCY;
+    }
+    const countryCode = this.getCountryCode(countrySelect);
+    return this.getCurrency(countryCode);
+  },
+
+  calculateVAT(amount, vatRate, fromGross = false) {
+    if (amount <= 0 || vatRate <= 0) {
+      return { net: 0, gross: 0, vat: 0 };
+    }
+    
+    if (fromGross) {
+      const net = amount / (1 + vatRate / 100);
+      return { net, gross: amount, vat: amount - net };
+    } else {
+      const gross = amount * (1 + vatRate / 100);
+      return { net: amount, gross, vat: gross - amount };
+    }
   }
 };

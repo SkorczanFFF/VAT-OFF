@@ -15,11 +15,11 @@ class VATCalculator {
   constructor() {
     this.MAX_PRICE = 1000000;
     this.MIN_PRICE = 1;
-    this.RESCAN_DEBOUNCE_MS = 1000;
-    this.MAX_PRICE_ELEMENTS = 500;
+    this.RESCAN_DEBOUNCE_MS = CONSTANTS.RESCAN_DEBOUNCE_MS;
+    this.MAX_PRICE_ELEMENTS = CONSTANTS.MAX_PRICE_ELEMENTS;
     
     this.enabled = false;
-    this.vatRate = 20;
+    this.vatRate = CONSTANTS.DEFAULT_VAT_RATE;
     this.countryCode = this.detectCountryCode();
     this.customCurrency = '';
     this.isCustomRate = false;
@@ -33,18 +33,7 @@ class VATCalculator {
     this.init();
   }
 
-  injectFont() {
-    // Inject Google Fonts link for Space Grotesk (CSS @import doesn't work reliably in content scripts)
-    if (!document.querySelector('link[href*="Space+Grotesk"]')) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap';
-      document.head.appendChild(link);
-    }
-  }
-
   init() {
-    this.injectFont();
     this.loadSettings();
     
     chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -61,15 +50,15 @@ class VATCalculator {
         }
         
         if (changes.vatRate || changes.vatRateNumber || changes.customRate) {
-          const vatRate = changes.vatRate ? changes.vatRate.newValue : (this.isCustomRate ? 'custom' : 'unknown');
-          this.isCustomRate = vatRate === 'custom';
+          const vatRate = changes.vatRate ? changes.vatRate.newValue : (this.isCustomRate ? CONSTANTS.CUSTOM_RATE_VALUE : 'unknown');
+          this.isCustomRate = vatRate === CONSTANTS.CUSTOM_RATE_VALUE;
           
           let newRate;
           if (changes.vatRateNumber) {
             newRate = changes.vatRateNumber.newValue;
           } else if (this.isCustomRate) {
             const customRate = changes.customRate ? changes.customRate.newValue : '';
-            newRate = parseInt(customRate, 10) || 20;
+            newRate = parseInt(customRate, 10) || CONSTANTS.DEFAULT_VAT_RATE;
           } else {
             newRate = this.vatRate; // Keep existing rate
           }
@@ -125,13 +114,13 @@ class VATCalculator {
       }
       
       if (result.vatRate) {
-        this.isCustomRate = result.vatRate === 'custom';
+        this.isCustomRate = result.vatRate === CONSTANTS.CUSTOM_RATE_VALUE;
         if (result.vatRateNumber) {
           this.vatRate = result.vatRateNumber;
         } else if (this.isCustomRate) {
-          this.vatRate = parseInt(result.customRate, 10) || 23;
+          this.vatRate = parseInt(result.customRate, 10) || CONSTANTS.DEFAULT_VAT_RATE;
         } else {
-          this.vatRate = 20; // Default fallback
+          this.vatRate = CONSTANTS.DEFAULT_VAT_RATE;
         }
       }
       if (result.customCurrency) {
@@ -195,24 +184,7 @@ class VATCalculator {
 
   isElementVisible(element) {
     if (!element) return false;
-    
-    // Fast visibility check using offsetParent
-    // offsetParent is null for elements with display:none or hidden ancestors
-    // This is 1000x faster than getComputedStyle and doesn't force reflows
-    // Trade-off: Misses opacity:0 and some edge cases, but covers 95% of hidden elements
     return element.offsetParent !== null;
-  }
-
-  isInViewport(element) {
-    if (!element) return false;
-    
-    const rect = element.getBoundingClientRect();
-    return (
-      rect.top < window.innerHeight &&
-      rect.bottom > 0 &&
-      rect.left < window.innerWidth &&
-      rect.right > 0
-    );
   }
 
   scanForPrices() {
@@ -269,7 +241,7 @@ class VATCalculator {
       
       while (node = walker.nextNode()) {
         nodeCount++;
-        if (nodeCount > 5000) {
+        if (nodeCount > CONSTANTS.MAX_SCAN_NODES) {
           ErrorHandler.performance('Too many nodes detected, stopping scan', { nodeCount });
           break;
         }
@@ -697,7 +669,7 @@ class VATCalculator {
 
   getCurrencySymbol(originalText) {
     if (this.isCustomRate) {
-      return this.customCurrency || '€';
+      return this.customCurrency || CONSTANTS.DEFAULT_CURRENCY;
     }
     
     if (!originalText) {
@@ -721,26 +693,29 @@ class VATCalculator {
   }
 
   getCurrencyByCountryCode(countryCode) {
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions || !countryCode) return '€';
+    if (!countryCode) return CONSTANTS.DEFAULT_CURRENCY;
+    const regions = VAT_CONFIG?.regions ?? [];
     
-    for (const region of VAT_CONFIG.regions) {
+    for (const region of regions) {
       const country = region.countries.find(c => c.code === countryCode);
       if (country) {
         return country.currency;
       }
     }
-    return '€';
+    return CONSTANTS.DEFAULT_CURRENCY;
   }
 
   detectCountryCode() {
     const locale = navigator.language || navigator.userLanguage || 'en-US';
-    const languageCode = locale.split('-')[0].toLowerCase();
-    const countryCode = locale.split('-')[1]?.toUpperCase();
+    const [lang, country] = locale.split('-');
+    const languageCode = lang?.toLowerCase() ?? 'en';
+    const countryCode = country?.toUpperCase();
     
-    if (typeof VAT_CONFIG === 'undefined' || !VAT_CONFIG || !VAT_CONFIG.regions) return 'GB';
+    const regions = VAT_CONFIG?.regions ?? [];
+    if (regions.length === 0) return 'GB';
     
     const validCountryCodes = [];
-    VAT_CONFIG.regions.forEach(region => {
+    regions.forEach(region => {
       region.countries.forEach(country => {
         validCountryCodes.push(country.code);
       });
@@ -750,7 +725,7 @@ class VATCalculator {
       return countryCode;
     }
     
-    return VAT_CONFIG.languageToCountry[languageCode] || 'GB';
+    return VAT_CONFIG?.languageToCountry?.[languageCode] ?? 'GB';
   }
 
   updatePriceElements() {

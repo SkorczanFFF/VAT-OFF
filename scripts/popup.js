@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   const vatRegionSelect = document.getElementById('vatRegion');
-  const vatRateSelect = document.getElementById('vatRate');
-  const customRateDiv = document.getElementById('customRateDiv');
+  const vatRateSelectElement = document.getElementById('vatRate');
+  const customRateContainer = document.getElementById('customRateDiv');
   const customRateInput = document.getElementById('customRate');
   const customCurrencyInput = document.getElementById('customCurrency');
   const saveCustomRateBtn = document.getElementById('saveCustomRateBtn');
@@ -17,31 +17,19 @@ document.addEventListener('DOMContentLoaded', function() {
   const calculatorResultValue = document.getElementById('calculatorResultValue');
   const calculatorResultVat = document.getElementById('calculatorResultVat');
 
-  let isEnabled = false;
+  let enabled = false;
   let saveTimeout = null;
   let savedCustomRate = '';
   let savedCustomCurrency = '';
 
-  SettingsManager.populateRegionSelect(vatRegionSelect, true);
-  
-  const defaultRegion = SettingsManager.detectDefaultRegion();
-  vatRegionSelect.value = defaultRegion;
-  SettingsManager.populateCountrySelect(vatRateSelect, defaultRegion);
-  
-  const defaultCountryCode = SettingsManager.detectDefaultCountryCode();
-  const hasDefaultCountry = Array.from(vatRateSelect.options).some(opt => opt.value === defaultCountryCode);
-  if (hasDefaultCountry) {
-    vatRateSelect.value = defaultCountryCode;
-  } else if (vatRateSelect.options.length > 0) {
-    vatRateSelect.value = vatRateSelect.options[0].value;
-  }
+  SettingsManager.initializeRegionCountrySelects(vatRegionSelect, vatRateSelectElement, true);
   
   loadSettings();
 
   initSectionDropdowns();
 
   vatRegionSelect.addEventListener('change', handleRegionChange);
-  vatRateSelect.addEventListener('change', handleVatRateChange);
+  vatRateSelectElement.addEventListener('change', handleVatRateChange);
   customRateInput.addEventListener('input', handleCustomRateInput);
   customCurrencyInput.addEventListener('input', updateSaveButtonVisibility);
   toggleBtn.addEventListener('click', handleToggleClick);
@@ -59,131 +47,83 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   function initSectionDropdowns() {
     const STORAGE_KEY = 'popupSections';
-    let lastSavedStateJson = '';
-    let dirty = false;
-    let writeVersion = 0;
 
-    function getSectionState() {
+    function saveSectionState() {
       const state = {};
       document.querySelectorAll('.vat-section[id]').forEach(function(section) {
         state[section.id] = section.classList.contains('vat-section--collapsed');
       });
-      return state;
-    }
-
-    function persistSectionState(state) {
-      if (!state || Object.keys(state).length === 0) return;
-      const nextJson = JSON.stringify(state);
-      if (nextJson === lastSavedStateJson) return;
-
-      lastSavedStateJson = nextJson;
-      dirty = true;
-      writeVersion += 1;
-      const thisWriteVersion = writeVersion;
-
       chrome.storage.local.set({ [STORAGE_KEY]: state }, function() {
         if (chrome.runtime.lastError) {
           ErrorHandler.storage('Failed to save popup section state', chrome.runtime.lastError);
-          return;
-        }
-        // Only clear dirty if this was the most recent write.
-        if (thisWriteVersion === writeVersion) {
-          dirty = false;
         }
       });
     }
 
-    function saveSectionStatesIfChanged() {
-      persistSectionState(getSectionState());
-    }
-
-    function bestEffortSaveOnClose() {
-      if (!dirty) return;
-      saveSectionStatesIfChanged();
-    }
-
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'hidden') {
-        bestEffortSaveOnClose();
-      }
-    });
-
-    window.addEventListener('pagehide', function() {
-      bestEffortSaveOnClose();
-    });
-
-    chrome.storage.local.get([STORAGE_KEY], function(result) {
-      if (chrome.runtime.lastError) {
-        ErrorHandler.storage('Failed to load popup section state', chrome.runtime.lastError);
-      }
-      const saved = result[STORAGE_KEY] || {};
-      document.querySelectorAll('.vat-section[id]').forEach(function(section) {
-        if (saved[section.id]) {
-          section.classList.add('vat-section--collapsed');
-          var h = section.querySelector('.vat-section-header');
-          if (h) h.setAttribute('aria-expanded', 'false');
+    function loadSectionState() {
+      chrome.storage.local.get([STORAGE_KEY], function(result) {
+        if (chrome.runtime.lastError) {
+          ErrorHandler.storage('Failed to load popup section state', chrome.runtime.lastError);
         }
-      });
-
-      // Seed lastSavedStateJson from the effective state after restore,
-      // so we don't write again unless something actually changes.
-      lastSavedStateJson = JSON.stringify(getSectionState());
-      dirty = false;
-
-      var container = document.querySelector('.vat-container--popup');
-      if (container) {
-        // Force a reflow to ensure styles are applied before removing loading class
-        // This prevents transitions from firing during initial render
-        container.offsetHeight;
-        requestAnimationFrame(function() {
-          container.classList.remove('vat-popup-loading-sections');
+        const saved = result[STORAGE_KEY] || {};
+        document.querySelectorAll('.vat-section[id]').forEach(function(section) {
+          if (saved[section.id]) {
+            section.classList.add('vat-section--collapsed');
+            const header = section.querySelector('.vat-section-header');
+            if (header) {
+              header.setAttribute('aria-expanded', 'false');
+            }
+          }
         });
-      }
 
-      const headers = document.querySelectorAll('.vat-section-header');
-      headers.forEach(function(header) {
-        const section = header.closest('.vat-section');
-        const body = section && section.querySelector('.vat-section-body');
-        if (!section || !body) return;
+        const container = document.querySelector('.vat-container--popup');
+        if (container) {
+          container.offsetHeight;
+          requestAnimationFrame(function() {
+            container.classList.remove('vat-popup-loading-sections');
+          });
+        }
 
-        function toggle() {
-          const wasCollapsed = section.classList.contains('vat-section--collapsed');
-          const isCollapsed = section.classList.toggle('vat-section--collapsed');
-          header.setAttribute('aria-expanded', !isCollapsed);
-          saveSectionStatesIfChanged();
-          
-          // Smooth scroll into view when opening
-          if (wasCollapsed && !isCollapsed) {
-            requestAnimationFrame(function() {
+        const headers = document.querySelectorAll('.vat-section-header');
+        headers.forEach(function(header) {
+          const section = header.closest('.vat-section');
+          const body = section && section.querySelector('.vat-section-body');
+          if (!section || !body) return;
+
+          function toggle() {
+            const wasCollapsed = section.classList.contains('vat-section--collapsed');
+            const isCollapsed = section.classList.toggle('vat-section--collapsed');
+            header.setAttribute('aria-expanded', !isCollapsed);
+            saveSectionState();
+            
+            if (wasCollapsed && !isCollapsed) {
               requestAnimationFrame(function() {
-                header.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+                requestAnimationFrame(function() {
+                  header.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+                });
               });
-            });
+            }
           }
-        }
 
-        header.addEventListener('click', function() {
-          toggle();
-          header.blur();
-        });
-        header.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
+          header.addEventListener('click', function() {
             toggle();
-          }
+            header.blur();
+          });
+          header.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggle();
+            }
+          });
         });
       });
-    });
+    }
+
+    loadSectionState();
   }
 
   function handleRegionChange() {
-    const regionId = vatRegionSelect.value;
-    SettingsManager.populateCountrySelect(vatRateSelect, regionId);
-    
-    if (vatRateSelect.options.length > 0) {
-      vatRateSelect.value = vatRateSelect.options[0].value;
-    }
-    
+    SettingsManager.handleRegionChange(vatRegionSelect, vatRateSelectElement);
     updateCustomRateVisibility();
     updateCalculatorVatRate();
     saveSettings();
@@ -200,13 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    const countryCode = SettingsManager.getCountryCode(vatRateSelect);
-    let vatRate;
-    if (vatRateSelect.value === 'custom') {
-      vatRate = parseFloat(customRateInput.value) || 23;
-    } else {
-      vatRate = SettingsManager.getRate(countryCode);
-    }
+    const vatRate = SettingsManager.getSelectedVatRate(vatRateSelectElement, customRateInput);
     
     if (calculatorVatRate) {
       calculatorVatRate.value = vatRate;
@@ -236,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function handleToggleClick() {
-    const newEnabled = !isEnabled;
+    const newEnabled = !enabled;
     chrome.storage.sync.set({ enabled: newEnabled }, function() {
       if (chrome.runtime.lastError) {
         ErrorHandler.storage('Failed to save enabled state', chrome.runtime.lastError);
@@ -244,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      isEnabled = newEnabled;
+      enabled = newEnabled;
       updateStatusIndicator(newEnabled);
     });
   }
@@ -259,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
       savedCustomCurrency = customCurrencyInput.value.trim();
       updateSaveButtonVisibility();
       
-      if (vatRateSelect.value === 'custom' && vatCalculator && vatCalculator.style.display !== 'none') {
+      if (vatRateSelectElement.value === CONSTANTS.CUSTOM_RATE_VALUE && vatCalculator && vatCalculator.style.display !== 'none') {
         updateCalculatorVatRate();
         updateCalculator();
       }
@@ -283,12 +217,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function updateCustomRateVisibility() {
-    customRateDiv.style.display = vatRateSelect.value === 'custom' ? 'block' : 'none';
+    customRateContainer.style.display = vatRateSelectElement.value === CONSTANTS.CUSTOM_RATE_VALUE ? 'block' : 'none';
     updateSaveButtonVisibility();
   }
 
   function updateSaveButtonVisibility() {
-    if (vatRateSelect.value !== 'custom') {
+    if (vatRateSelectElement.value !== CONSTANTS.CUSTOM_RATE_VALUE) {
       saveCustomRateBtn.style.display = 'none';
       return;
     }
@@ -309,37 +243,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const amount = parseFloat(calculatorAmount.value) || 0;
     const vatRate = parseFloat(calculatorVatRate.value) || 0;
+    const currency = SettingsManager.getSelectedCurrency(vatRateSelectElement, customCurrencyInput);
+    const fromGross = calculatorBruttoMode.checked;
     
-    const countryCode = SettingsManager.getCountryCode(vatRateSelect);
-    let currency;
-    if (vatRateSelect.value === 'custom') {
-      currency = customCurrencyInput.value.trim() || '€';
+    const result = SettingsManager.calculateVAT(amount, vatRate, fromGross);
+    
+    calculatorResultLabel.textContent = fromGross ? 'NET' : 'GROSS';
+    
+    if (amount <= 0 || vatRate <= 0) {
+      calculatorResultValue.textContent = '0.00' + currency;
+      calculatorResultVat.textContent = '';
     } else {
-      currency = SettingsManager.getCurrency(countryCode);
-    }
-
-    if (calculatorBruttoMode.checked) {
-      calculatorResultLabel.textContent = 'NET';
-      if (amount <= 0 || vatRate <= 0) {
-        calculatorResultValue.textContent = '0.00' + currency;
-        calculatorResultVat.textContent = '';
-      } else {
-        const netto = amount / (1 + vatRate / 100);
-        const vatAmount = amount - netto;
-        calculatorResultValue.innerHTML = netto.toFixed(2) + currency + ' <span class="vat-calculator-result-vat">(VAT: ' + vatAmount.toFixed(2) + currency + ')</span>';
-        calculatorResultVat.textContent = '';
-      }
-    } else {
-      calculatorResultLabel.textContent = 'GROSS';
-      if (amount <= 0 || vatRate <= 0) {
-        calculatorResultValue.textContent = '0.00' + currency;
-        calculatorResultVat.textContent = '';
-      } else {
-        const brutto = amount * (1 + vatRate / 100);
-        const vatAmount = brutto - amount;
-        calculatorResultValue.innerHTML = brutto.toFixed(2) + currency + ' <span class="vat-calculator-result-vat">(VAT: ' + vatAmount.toFixed(2) + currency + ')</span>';
-        calculatorResultVat.textContent = '';
-      }
+      const displayValue = fromGross ? result.net : result.gross;
+      calculatorResultValue.innerHTML = displayValue.toFixed(2) + currency + ' <span class="vat-calculator-result-vat">(VAT: ' + result.vat.toFixed(2) + currency + ')</span>';
+      calculatorResultVat.textContent = '';
     }
   }
 
@@ -355,8 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         vatCalculator.style.display = 'none';
       }
-      // Update status indicator to reflect calculator visibility
-      if (!isEnabled) {
+      if (!enabled) {
         updateStatusIndicator(false);
       }
     });
@@ -386,26 +302,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      if (result.vatRegion) {
-        vatRegionSelect.value = result.vatRegion;
-        SettingsManager.populateCountrySelect(vatRateSelect, result.vatRegion);
-      } else {
-        const fallbackRegion = SettingsManager.detectDefaultRegion();
-        vatRegionSelect.value = fallbackRegion;
-        SettingsManager.populateCountrySelect(vatRateSelect, fallbackRegion);
-      }
+      SettingsManager.applyRegionCountrySettings(vatRegionSelect, vatRateSelectElement, result);
       
-      if (result.vatRate) {
-        vatRateSelect.value = result.vatRate;
-      } else {
-        const fallbackCountryCode = SettingsManager.detectDefaultCountryCode();
-        const hasFallbackCountry = Array.from(vatRateSelect.options).some(opt => opt.value === fallbackCountryCode);
-        if (hasFallbackCountry) {
-          vatRateSelect.value = fallbackCountryCode;
-        } else if (vatRateSelect.options.length > 0) {
-          vatRateSelect.value = vatRateSelect.options[0].value;
-        }
-      }
       if (result.customRate) {
         customRateInput.value = result.customRate;
         savedCustomRate = result.customRate;
@@ -419,10 +317,10 @@ document.addEventListener('DOMContentLoaded', function() {
         savedCustomCurrency = '';
       }
       if (result.enabled !== undefined) {
-        isEnabled = result.enabled;
+        enabled = result.enabled;
         updateStatusIndicator(result.enabled);
       } else {
-        isEnabled = false;
+        enabled = false;
         updateStatusIndicator(false);
       }
       updateCustomRateVisibility();
@@ -433,10 +331,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function saveSettings(showSuccessMessage, onSuccessCallback) {
     const vatRegion = vatRegionSelect.value;
-    const vatRate = vatRateSelect.value;
+    const vatRate = vatRateSelectElement.value;
     const customRate = customRateInput.value;
     const customCurrency = customCurrencyInput.value.trim().substring(0, 4);
-    const countryCode = SettingsManager.getCountryCode(vatRateSelect);
+    const countryCode = SettingsManager.getCountryCode(vatRateSelectElement);
     
     const prepared = SettingsManager.prepareSettingsForSave(vatRate, customRate, countryCode, { 
       vatRegion: vatRegion,
