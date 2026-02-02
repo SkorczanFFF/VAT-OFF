@@ -826,6 +826,11 @@ class VATCalculator {
   }
 }
 
+if (window.__vatOffInjected) {
+  return;
+}
+window.__vatOffInjected = true;
+
 if (!isExtensionPage()) {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {

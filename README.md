@@ -240,10 +240,11 @@ The extension recognizes various price formats:
 
 ### Architecture
 - **Manifest Version**: 3 (latest Chrome extension standard)
-- **Permissions**: 
-  - `storage`: For saving and syncing user settings
-  - `activeTab`: For accessing page content
-- **Content Scripts**: Injected into all HTTP/HTTPS pages
+- **Permissions**:
+  - `storage`: Saving and syncing user settings (sync + local)
+  - `activeTab`: Temporary access to the current tab when the user clicks the extension icon
+  - `scripting`: Injecting the content script and CSS into the active tab on demand
+- **Injection model**: No declarative content scripts. When the user opens the popup (clicks the icon), the extension injects the price-detection script and styles into the **current tab only** via `chrome.scripting.executeScript` and `chrome.scripting.insertCSS`. VAT tooltips then run only in that tab; other tabs get the script only if the user opens the popup while that tab is active.
 - **Storage**: Uses Chrome's sync storage for cross-device settings
 
 ### File Structure

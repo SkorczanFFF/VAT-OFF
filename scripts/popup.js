@@ -22,6 +22,39 @@ document.addEventListener('DOMContentLoaded', function() {
   let savedCustomRate = '';
   let savedCustomCurrency = '';
 
+  function showInjectMessage(message, container) {
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'vat-status vat-status--error vat-status--toast';
+    div.textContent = '⚠ ' + message;
+    container.appendChild(div);
+    setTimeout(function() { div.remove(); }, 3000);
+  }
+
+  chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+    if (!tabs || tabs.length === 0) {
+      showInjectMessage('Open a webpage first', messageContainer);
+      return;
+    }
+    const tab = tabs[0];
+    const url = (tab.url || '').toLowerCase();
+    if (url.startsWith('chrome://') || url.startsWith('chrome-extension://') ||
+        url.startsWith('edge://') || url.startsWith('moz-extension://') ||
+        url.startsWith('about:') || url.startsWith('extension://')) {
+      showInjectMessage('Can\'t run on this page', messageContainer);
+      return;
+    }
+    const scriptFiles = ['scripts/error-handler.js', 'scripts/config.js', 'scripts/content.js'];
+    const cssFiles = ['styles/fonts.css', 'styles/variables.css', 'styles/components.css', 'styles/content.css'];
+    chrome.scripting.executeScript({ target: { tabId: tab.id }, files: scriptFiles })
+      .then(function() {
+        return chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: cssFiles });
+      })
+      .catch(function() {
+        showInjectMessage('Can\'t run on this page', messageContainer);
+      });
+  });
+
   SettingsManager.initializeRegionCountrySelects(vatRegionSelect, vatRateSelectElement, true);
   
   loadSettings();

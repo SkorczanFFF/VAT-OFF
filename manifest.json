@@ -5,15 +5,8 @@
   "description": "Show prices excluding VAT when you hover over them on any website.",
   "permissions": [
     "storage",
-    "activeTab"
-  ],
-  "content_scripts": [
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["scripts/error-handler.js", "scripts/config.js", "scripts/content.js"],
-      "css": ["styles/fonts.css", "styles/variables.css", "styles/components.css", "styles/content.css"],
-      "run_at": "document_idle"
-    }
+    "activeTab",
+    "scripting"
   ],
   "action": {
     "default_popup": "popup.html",
