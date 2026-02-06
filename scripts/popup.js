@@ -22,13 +22,15 @@ document.addEventListener('DOMContentLoaded', function() {
   let savedCustomRate = '';
   let savedCustomCurrency = '';
 
-  function showInjectMessage(message, container) {
+  function showInjectMessage(message, container, persistent) {
     if (!container) return;
     const div = document.createElement('div');
-    div.className = 'vat-status vat-status--error vat-status--toast';
+    div.className = 'vat-status vat-status--error' + (persistent ? ' vat-status--persistent' : ' vat-status--toast');
     div.textContent = '⚠ ' + message;
     container.appendChild(div);
-    setTimeout(function() { div.remove(); }, 3000);
+    if (!persistent) {
+      setTimeout(function() { div.remove(); }, 3000);
+    }
   }
 
   chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
@@ -41,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (url.startsWith('chrome://') || url.startsWith('chrome-extension://') ||
         url.startsWith('edge://') || url.startsWith('moz-extension://') ||
         url.startsWith('about:') || url.startsWith('extension://')) {
-      showInjectMessage('Can\'t run on this page', messageContainer);
+      showInjectMessage('Can\'t run on this page', messageContainer, true);
       return;
     }
     const scriptFiles = ['scripts/error-handler.js', 'scripts/config.js', 'scripts/content.js'];
@@ -51,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: cssFiles });
       })
       .catch(function() {
-        showInjectMessage('Can\'t run on this page', messageContainer);
+        showInjectMessage('Can\'t run on this page', messageContainer, true);
       });
   });
 
@@ -353,8 +355,8 @@ document.addEventListener('DOMContentLoaded', function() {
         enabled = result.enabled;
         updateStatusIndicator(result.enabled);
       } else {
-        enabled = false;
-        updateStatusIndicator(false);
+        enabled = true;
+        updateStatusIndicator(true);
       }
       updateCustomRateVisibility();
       updateCalculatorVisibility();

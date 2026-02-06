@@ -1,13 +1,16 @@
-const CONSTANTS = {
-  MAX_SCAN_NODES: 5000,
+if (typeof window.CONSTANTS === 'undefined') {
+window.CONSTANTS = {
+  MAX_SCAN_NODES: 20000,
   MAX_PRICE_ELEMENTS: 500,
   RESCAN_DEBOUNCE_MS: 1000,
   CUSTOM_RATE_VALUE: 'custom',
   DEFAULT_CURRENCY: '€',
   DEFAULT_VAT_RATE: 20
 };
+}
 
-const VAT_CONFIG = {
+if (typeof window.VAT_CONFIG === 'undefined') {
+window.VAT_CONFIG = {
   regions: [
     {
       id: 'eu',
@@ -15,7 +18,7 @@ const VAT_CONFIG = {
       countries: [
         { code: 'AT', name: 'Austria', rate: 20, currency: '€' },
         { code: 'BE', name: 'Belgium', rate: 21, currency: '€' },
-        { code: 'BG', name: 'Bulgaria', rate: 20, currency: 'лв' },
+        { code: 'BG', name: 'Bulgaria', rate: 20, currency: '€' },
         { code: 'HR', name: 'Croatia', rate: 25, currency: '€' },
         { code: 'CY', name: 'Cyprus', rate: 19, currency: '€' },
         { code: 'CZ', name: 'Czech Republic', rate: 21, currency: 'Kč' },
@@ -204,3 +207,16 @@ const VAT_CONFIG = {
     da: 'DK'
   }
 };
+}
+
+if (typeof window.CURRENCY_REGEX_SOURCE === 'undefined') {
+  function getCurrencyRegexSource() {
+    const set = new Set();
+    window.VAT_CONFIG.regions.forEach(r => {
+      (r.countries || []).forEach(c => { if (c.currency) set.add(c.currency); });
+    });
+    ['EUR', 'USD', 'GBP', 'PLN', 'CZK', 'SEK', 'DKK', 'NOK', 'HRK', 'BYN', 'RON', 'UAH', 'BGN'].forEach(c => set.add(c));
+    return [...set].map(s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  }
+  window.CURRENCY_REGEX_SOURCE = getCurrencyRegexSource();
+}

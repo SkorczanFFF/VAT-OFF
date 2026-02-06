@@ -11,7 +11,8 @@ function isExtensionPage() {
          href.includes('extension://');
 }
 
-class VATCalculator {
+if (typeof window.VATCalculator === 'undefined') {
+window.VATCalculator = class VATCalculator {
   constructor() {
     this.MAX_PRICE = 1000000;
     this.MIN_PRICE = 1;
@@ -28,6 +29,7 @@ class VATCalculator {
     this.priceElements = [];
     this.tooltip = null;
     this.rescanTimeout = null;
+    this.initialRescanTimeout = null;
     this.isScanning = false;
     this.mutationObserver = null;
     this.init();
@@ -131,6 +133,8 @@ class VATCalculator {
       }
       if (result.enabled !== undefined) {
         this.enabled = result.enabled;
+      } else {
+        this.enabled = true;
       }
       if (result.watchChanges !== undefined) {
         this.watchChanges = result.watchChanges;
@@ -140,11 +144,29 @@ class VATCalculator {
       }
       this.updatePriceElements();
       this.scanForPrices();
-      
+      this.updatePriceElements();
+      if (this.initialRescanTimeout) clearTimeout(this.initialRescanTimeout);
+      this.initialRescanTimeout = setTimeout(() => {
+        this.initialRescanTimeout = null;
+        try { this.scanForPrices(); this.updatePriceElements(); } catch (e) { ErrorHandler.runtime('Delayed rescan failed', e); }
+      }, 2000);
+      this._scheduleLoadRescan();
       if (this.watchChanges) {
         this.observeChanges();
       }
     });
+  }
+
+  _scheduleLoadRescan() {
+    const runRescan = () => {
+      try { this.scanForPrices(); this.updatePriceElements(); } catch (e) { ErrorHandler.runtime('Load rescan failed', e); }
+    };
+    if (document.readyState === 'complete') {
+      setTimeout(runRescan, 300);
+    } else {
+      window.addEventListener('load', () => setTimeout(runRescan, 300), { once: true });
+    }
+    this._lateRescanTimeout = setTimeout(runRescan, 5000);
   }
 
   cleanupPriceElements() {
@@ -167,17 +189,17 @@ class VATCalculator {
   
   removeHoverEvents(element) {
     if (!element) return;
-    
+    const capture = true;
     if (element._vatMouseEnter) {
-      element.removeEventListener('mouseenter', element._vatMouseEnter);
+      element.removeEventListener('mouseenter', element._vatMouseEnter, capture);
       delete element._vatMouseEnter;
     }
     if (element._vatMouseLeave) {
-      element.removeEventListener('mouseleave', element._vatMouseLeave);
+      element.removeEventListener('mouseleave', element._vatMouseLeave, capture);
       delete element._vatMouseLeave;
     }
     if (element._vatMouseMove) {
-      element.removeEventListener('mousemove', element._vatMouseMove);
+      element.removeEventListener('mousemove', element._vatMouseMove, capture);
       delete element._vatMouseMove;
     }
   }
@@ -187,18 +209,226 @@ class VATCalculator {
     return element.offsetParent !== null;
   }
 
+  getCurrencyRegexSource() {
+    return (typeof CURRENCY_REGEX_SOURCE !== 'undefined' && CURRENCY_REGEX_SOURCE)
+      ? CURRENCY_REGEX_SOURCE
+      : 'zł|PLN|€|EUR|\\$|USD|£|GBP|kr|Kč|lei|лв|₴|Br|Ft|kn';
+  }
+
+  scanPriceContainers() {
+    const currencyPart = this.getCurrencyRegexSource();
+    const seen = new Set();
+    const schemes = [
+      {
+        containerSelectors: ['[class*="price-template__large"]', '[class*="price-template"][class*="large"]', '[class*="price-template"]'],
+        totalSel: '[class*="--total"]',
+        decimalSel: '[class*="--decimal"]',
+        currencySel: '[class*="--currency"]'
+      },
+      {
+        containerSelectors: ['.main-price', '[class*="main-price"]'],
+        totalSel: '.whole, [class*="whole"]',
+        decimalSel: '.cents, [class*="cents"]',
+        currencySel: '.currency, [class*="currency"]'
+      }
+    ];
+    for (const scheme of schemes) {
+      for (const selector of scheme.containerSelectors) {
+        const elements = document.querySelectorAll(selector);
+        for (const el of elements) {
+          if (this.priceElements.length >= this.MAX_PRICE_ELEMENTS) break;
+          if (el.closest('.vat-price-container') || el.classList.contains('vat-price-container')) continue;
+          if (seen.has(el)) continue;
+          seen.add(el);
+          const totalSpan = el.querySelector(scheme.totalSel);
+          const decimalSpan = el.querySelector(scheme.decimalSel);
+          const currencySpan = el.querySelector(scheme.currencySel);
+          if (!totalSpan || !totalSpan.textContent.trim()) continue;
+          const totalText = totalSpan.textContent.trim().replace(/\s/g, '');
+          const decimalText = decimalSpan ? decimalSpan.textContent.trim() : '00';
+          const currencyText = currencySpan ? currencySpan.textContent.trim() : 'zł';
+          if (!/^\d+$/.test(totalText)) continue;
+          const decimalNorm = /^\d{1,2}$/.test(decimalText) ? decimalText.padStart(2, '0').slice(0, 2) : '00';
+          const priceText = totalText + ',' + decimalNorm + ' ' + currencyText;
+          const price = this.parsePrice(priceText);
+          if (price <= 0 || price >= this.MAX_PRICE) continue;
+          if (!this.validatePrice(priceText, totalText + ',' + decimalNorm, price)) continue;
+          if (!this.isElementVisible(el)) continue;
+          try {
+            el.dataset.vatProcessed = 'true';
+            el.dataset.price = price;
+            el.dataset.originalText = priceText;
+            el.classList.add('vat-price-container');
+            el.classList.add(this.enabled ? 'vat-enabled' : 'vat-disabled');
+            this.addHoverEvents(el);
+            this.priceElements.push(el);
+          } catch (err) {
+            ErrorHandler.runtime('Container price setup failed', err);
+          }
+        }
+      }
+    }
+
+    const dataPriceSelectors = ['.product-price', '[class*="product-price"]'];
+    for (const selector of dataPriceSelectors) {
+      const elements = document.querySelectorAll(selector);
+      for (const el of elements) {
+        if (this.priceElements.length >= this.MAX_PRICE_ELEMENTS) break;
+        if (el.closest('.vat-price-container') || el.classList.contains('vat-price-container')) continue;
+        if (seen.has(el)) continue;
+        const dataPrice = el.getAttribute('data-price');
+        if (!dataPrice || dataPrice.trim() === '') continue;
+        const price = parseFloat(dataPrice.replace(/\s/g, '').replace(',', '.'));
+        if (isNaN(price) || price <= 0 || price >= this.MAX_PRICE) continue;
+        let currencyText = 'zł';
+        const dataDefault = el.getAttribute('data-default') || el.getAttribute('data-default-price-gross') || '';
+        const dataCurrencyRe = (typeof CURRENCY_REGEX_SOURCE !== 'undefined' && CURRENCY_REGEX_SOURCE)
+          ? new RegExp('(?:' + CURRENCY_REGEX_SOURCE + ')', 'i')
+          : /(?:zł|PLN|€|EUR|\$|USD|£|GBP|kr|Kč|lei|лв|₴|Br|Ft|kn)/i;
+        const currencyMatch = dataDefault.match(dataCurrencyRe);
+        if (currencyMatch) currencyText = currencyMatch[0];
+        else {
+          const textContent = (el.textContent || '').trim();
+          const textCurrencyMatch = textContent.match(dataCurrencyRe);
+          if (textCurrencyMatch) currencyText = textCurrencyMatch[0];
+        }
+        const totalText = Math.floor(price).toString();
+        const decimalPart = price % 1;
+        const decimalNorm = decimalPart > 0 ? Math.round(decimalPart * 100).toString().padStart(2, '0').slice(0, 2) : '00';
+        const priceText = totalText + ',' + decimalNorm + ' ' + currencyText;
+        if (!this.validatePrice(priceText, totalText + ',' + decimalNorm, price)) continue;
+        if (!this.isElementVisible(el)) continue;
+        seen.add(el);
+        try {
+          el.dataset.vatProcessed = 'true';
+          el.dataset.price = price;
+          el.dataset.originalText = priceText;
+          el.classList.add('vat-price-container');
+          el.classList.add(this.enabled ? 'vat-enabled' : 'vat-disabled');
+          this.addHoverEvents(el);
+          this.priceElements.push(el);
+        } catch (err) {
+          ErrorHandler.runtime('Container price setup failed', err);
+        }
+      }
+    }
+
+    const dataNamePriceSelectors = ['[data-name="productPrice"]', '[data-name*="productPrice"]'];
+    const ariaPricePattern4to7 = new RegExp('(\\d{4,7}(?:[.,]\\d{2})?)\\s*(?:' + currencyPart + ')', 'gi');
+    const ariaPricePattern = new RegExp('(\\d{1,3}(?:[\\s,.]\\d{3}){0,4}(?:[.,]\\d{2})?)\\s*(?:' + currencyPart + ')', 'gi');
+    const ariaPricePatternCurrencyFirst = new RegExp('(?:' + currencyPart + ')\\s*(\\d{1,3}(?:[\\s,.]\\d{3}){0,4}(?:[.,]\\d{2})?)', 'gi');
+    for (const selector of dataNamePriceSelectors) {
+      const elements = document.querySelectorAll(selector);
+      for (const el of elements) {
+        if (this.priceElements.length >= this.MAX_PRICE_ELEMENTS) break;
+        if (el.closest('.vat-price-container') || el.classList.contains('vat-price-container')) continue;
+        if (seen.has(el)) continue;
+        let priceSource = el.getAttribute('aria-label') || '';
+        if (!priceSource) {
+          const ariaEl = el.querySelector('[aria-label*="zł"], [aria-label*="PLN"], [aria-label*="€"], [aria-label*="EUR"], [aria-label*="$"], [aria-label*="£"]');
+          if (ariaEl) priceSource = ariaEl.getAttribute('aria-label') || '';
+        }
+        if (!priceSource) priceSource = (el.textContent || '').trim();
+        if (priceSource.length < 3) continue;
+        ariaPricePattern4to7.lastIndex = 0;
+        let match = ariaPricePattern4to7.exec(priceSource);
+        if (!match) {
+          ariaPricePattern.lastIndex = 0;
+          match = ariaPricePattern.exec(priceSource);
+        }
+        if (!match) {
+          ariaPricePatternCurrencyFirst.lastIndex = 0;
+          match = ariaPricePatternCurrencyFirst.exec(priceSource);
+        }
+        if (!match) continue;
+        const priceText = match[1];
+        const price = this.parsePrice(priceText);
+        if (price <= 0 || price >= this.MAX_PRICE) continue;
+        if (!this.validatePrice(priceSource, priceText, price)) continue;
+        if (!this.isElementVisible(el)) continue;
+        seen.add(el);
+        try {
+          el.dataset.vatProcessed = 'true';
+          el.dataset.price = price;
+          el.dataset.originalText = match[0].trim();
+          el.classList.add('vat-price-container');
+          el.classList.add(this.enabled ? 'vat-enabled' : 'vat-disabled');
+          this.addHoverEvents(el);
+          this.priceElements.push(el);
+        } catch (err) {
+          ErrorHandler.runtime('Container price setup failed', err);
+        }
+      }
+    }
+
+    const textPricePattern4to7 = new RegExp('(\\d{4,7}(?:[.,]\\d{2})?)\\s*(?:' + currencyPart + ')', 'gi');
+    const textPricePattern = new RegExp('(\\d{1,3}(?:[\\s,.]\\d{3}){0,4}(?:[.,]\\d{2})?)\\s*(?:' + currencyPart + ')', 'gi');
+    const textPricePatternCurrencyFirst = new RegExp('(?:' + currencyPart + ')\\s*(\\d{1,3}(?:[\\s,.]\\d{3}){0,4}(?:[.,]\\d{2})?)', 'gi');
+    const textPriceSelectors = [
+      '[class*="__price"]', '[class*="-price"]', '[class*="price"]',
+      '[class*="cena"]', '[class*="preis"]', '[class*="prix"]', '[class*="precio"]', '[class*="prezzo"]', '[class*="valor"]',
+      '[class*="pris"]', '[class*="fiyat"]', '[class*="cijena"]', '[class*="hinta"]', '[class*="prijs"]',
+      '[data-testid*="price"]', '[data-testid*="Price"]',
+      '[aria-label*="€"]', '[aria-label*="$"]', '[aria-label*="£"]', '[aria-label*="zł"]', '[aria-label*="kr"]', '[aria-label*="R$"]', '[aria-label*="¥"]', '[aria-label*="₹"]', '[aria-label*="₽"]', '[aria-label*="₺"]', '[aria-label*="PLN"]', '[aria-label*="EUR"]', '[aria-label*="USD"]'
+    ];
+    for (const selector of textPriceSelectors) {
+      const elements = document.querySelectorAll(selector);
+      for (const el of elements) {
+        if (this.priceElements.length >= this.MAX_PRICE_ELEMENTS) break;
+        if (el.closest('.vat-price-container') || el.classList.contains('vat-price-container')) continue;
+        if (seen.has(el)) continue;
+        const text = (el.textContent || '').trim();
+        if (text.length < 3) continue;
+        textPricePattern4to7.lastIndex = 0;
+        let match = textPricePattern4to7.exec(text);
+        if (!match) {
+          textPricePattern.lastIndex = 0;
+          match = textPricePattern.exec(text);
+        }
+        if (!match) {
+          textPricePatternCurrencyFirst.lastIndex = 0;
+          match = textPricePatternCurrencyFirst.exec(text);
+        }
+        if (!match) continue;
+        const priceText = match[1];
+        const price = this.parsePrice(priceText);
+        if (price <= 0 || price >= this.MAX_PRICE) continue;
+        if (!this.validatePrice(text, priceText, price)) continue;
+        if (!this.isElementVisible(el)) continue;
+        seen.add(el);
+        try {
+          el.dataset.vatProcessed = 'true';
+          el.dataset.price = price;
+          el.dataset.originalText = match[0].trim();
+          el.classList.add('vat-price-container');
+          el.classList.add(this.enabled ? 'vat-enabled' : 'vat-disabled');
+          this.addHoverEvents(el);
+          this.priceElements.push(el);
+        } catch (err) {
+          ErrorHandler.runtime('Container price setup failed', err);
+        }
+      }
+    }
+  }
+
   scanForPrices() {
     if (this.isScanning) return;
     if (isExtensionPage()) return;
     
     this.cleanupPriceElements();
+    if (!this.enabled) return;
     
     this.isScanning = true;
 
     try {
+      this.scanPriceContainers();
+
+      const currencyPart = this.getCurrencyRegexSource();
       const pricePatterns = [
-        /(\d{1,3}(?:[\s,.]\d{3}){0,4}(?:[.,]\d{2})?)\s*(?:zł|PLN|€|EUR|\$|USD|£|GBP|kr|Kč|lei|лв|₴|Br|Ft|kn)/gi,
-        /(?:price|cost|amount|total|sum|cena|preis|prix|precio|prezzo|valor):\s*(\d{1,3}(?:[\s,.]\d{3}){0,4}(?:[.,]\d{2})?)/gi,
+        new RegExp('(\\d{4,7}(?:[.,]\\d{2})?)\\s*(?:' + currencyPart + ')', 'gi'),
+        new RegExp('(\\d{1,3}(?:[\\s,.]\\d{3}){0,4}(?:[.,]\\d{2})?)\\s*(?:' + currencyPart + ')', 'gi'),
+        new RegExp('(?:' + currencyPart + ')\\s*(\\d{1,3}(?:[\\s,.]\\d{3}){0,4}(?:[.,]\\d{2})?)', 'gi'),
+        /(?:price|cost|amount|total|sum|cena|preis|prix|precio|prezzo|valor|pris|fiyat|cijena|hinta|prijs):\s*(\d{1,3}(?:[\s,.]\d{3}){0,4}(?:[.,]\d{2})?)/gi,
         /(\d{1,3}(?:[\s,.]\d{3}){1,4}(?:[.,]\d{2})?(?![\da-zA-Z])|\d{4,7}(?:[.,]\d{2})(?![\da-zA-Z]))/g
       ];
 
@@ -223,7 +453,8 @@ class VATCalculator {
             
             if (parent.classList.contains('vat-price-element') || 
                 parent.classList.contains('vat-tooltip') ||
-                parent.classList.contains('vat-price-container')) {
+                parent.classList.contains('vat-price-container') ||
+                parent.closest('.vat-price-container')) {
               return NodeFilter.FILTER_REJECT;
             }
             
@@ -265,7 +496,6 @@ class VATCalculator {
           while ((match = pattern.exec(text)) !== null) {
             const priceText = match[1];
             const price = this.parsePrice(priceText);
-            
             if (price > 0 && price < this.MAX_PRICE && this.validatePrice(text, priceText, price)) {
               nodesToProcess.push({
                 node: node,
@@ -306,15 +536,15 @@ class VATCalculator {
     const falsePositives = [
       'kurier', 'gls', 'dpd', 'ups', 'fedex', 'dhl', 'paczkomat', 'inpost',
       'przedpłata', 'dostawa', 'wysyłka', 'opłata', 'koszt', 'shipping', 'delivery',
-      'nr', 'numer', 'number', 'id', 'kod', 'code', 'ref', 'reference',
       'order', 'zamówienie', 'invoice', 'faktura',
       'version', 'ver', 'v.', 'build', 'release',
-      'tel', 'telefon', 'phone', 'fax', 'zip', 'postal', 'kod pocztowy',
+      'telefon', 'phone', 'fax', 'postal', 'kod pocztowy',
       'nip', 'regon', 'krs',
       'page', 'strona', 'line', 'linia', 'row', 'wiersz', 'column', 'kolumna',
       'date', 'data', 'time', 'czas', 'hour', 'godzina', 'year', 'rok',
       'qty', 'quantity', 'ilość', 'szt', 'pcs', 'pieces', 'units'
     ];
+    const wordBoundaryFalsePositives = ['nr', 'numer', 'number', 'id', 'kod', 'code', 'ref', 'reference', 'tel', 'zip'];
     
     const productKeywords = [
       'ryzen', 'intel', 'core', 'xeon', 'celeron', 'pentium', 'athlon',
@@ -336,10 +566,22 @@ class VATCalculator {
           return false;
         }
       }
-      
-      for (const pk of productKeywords) {
-        if (surroundingContext.includes(pk)) {
+      for (const w of wordBoundaryFalsePositives) {
+        const re = new RegExp('(?:^|[^a-zA-Z\u00c0-\u024f])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:$|[^a-zA-Z\u00c0-\u024f])', 'i');
+        if (re.test(surroundingContext)) {
           return false;
+        }
+      }
+      
+      const currencyRe = (typeof CURRENCY_REGEX_SOURCE !== 'undefined' && CURRENCY_REGEX_SOURCE)
+        ? new RegExp(CURRENCY_REGEX_SOURCE, 'i')
+        : /zł|PLN|€|EUR|\$|USD|£|GBP|kr|Kč|lei|лв|₴|Br|Ft|kn/i;
+      const hasCurrencySymbol = currencyRe.test(text);
+      if (!hasCurrencySymbol) {
+        for (const pk of productKeywords) {
+          if (surroundingContext.includes(pk)) {
+            return false;
+          }
         }
       }
     }
@@ -354,8 +596,10 @@ class VATCalculator {
     if (/\d+\s*[x×]\s*\d+/i.test(contextWindow)) return false;
     if (/\b\d{1,2}[.\/\-]\d{1,2}[.\/\-]\d{2,4}\b/.test(contextWindow)) return false;
     if (/\d{1,2}:\d{2}(?::\d{2})?/.test(contextWindow)) return false;
-    if (/\bv?\d+\.\d+(?:\.\d+)?\b/i.test(contextWindow) && 
-        !(/price|cost|€|\$|£|zł/i.test(contextWindow))) return false;
+    const ctxCurrencyRe = (typeof CURRENCY_REGEX_SOURCE !== 'undefined' && CURRENCY_REGEX_SOURCE)
+      ? new RegExp('(?:' + CURRENCY_REGEX_SOURCE + ')|price|cost|cena', 'i')
+      : /price|cost|€|\$|£|zł/i;
+    if (/\bv?\d+\.\d+(?:\.\d+)?\b/i.test(contextWindow) && !ctxCurrencyRe.test(contextWindow)) return false;
     if (/build\s*\d+/i.test(contextWindow)) return false;
     
     const afterPriceIndex = priceStartIndex + priceText.length;
@@ -373,8 +617,10 @@ class VATCalculator {
       }
     }
     
-    if (/\b[a-zA-Z]{1,4}\d+[a-zA-Z]*\b/.test(contextWindow) && 
-        !(/price|cost|€|\$|£|zł|cena/i.test(contextWindow))) {
+    const ctxPriceRe = (typeof CURRENCY_REGEX_SOURCE !== 'undefined' && CURRENCY_REGEX_SOURCE)
+      ? new RegExp('(?:' + CURRENCY_REGEX_SOURCE + ')|price|cost|cena', 'i')
+      : /price|cost|€|\$|£|zł|cena/i;
+    if (/\b[a-zA-Z]{1,4}\d+[a-zA-Z]*\b/.test(contextWindow) && !ctxPriceRe.test(contextWindow)) {
       return false;
     }
     
@@ -382,7 +628,10 @@ class VATCalculator {
   }
 
   parsePrice(priceText) {
-    let normalized = priceText.replace(/(?:zł|PLN|€|EUR|\$|USD|£|GBP|kr|Kč|lei|лв|₴|Br|Ft|kn)/gi, '').trim();
+    const stripCurrencyRe = (typeof CURRENCY_REGEX_SOURCE !== 'undefined' && CURRENCY_REGEX_SOURCE)
+      ? new RegExp('(?:' + CURRENCY_REGEX_SOURCE + ')', 'gi')
+      : /(?:zł|PLN|€|EUR|\$|USD|£|GBP|kr|Kč|lei|лв|₴|Br|Ft|kn)/gi;
+    let normalized = priceText.replace(stripCurrencyRe, '').trim();
     normalized = normalized.replace(/\s/g, '');
     
     if (!normalized || !/\d/.test(normalized)) return 0;
@@ -497,14 +746,12 @@ class VATCalculator {
       }
 
       const parent = textNode.parentNode;
-      
       if (!parent || !document.contains(parent)) {
         ErrorHandler.dom('Parent node not found or not in DOM');
         return;
       }
-      
+
       const text = textNode.nodeValue || textNode.textContent || '';
-      
       if (!text || startIndex < 0 || length <= 0 || startIndex + length > text.length) {
         ErrorHandler.domDebug('Text node modified since scan, skipping', {
           textLength: text ? text.length : 0,
@@ -513,14 +760,13 @@ class VATCalculator {
         });
         return;
       }
-      
+
       const priceText = text.substring(startIndex, startIndex + length);
-      
       if (!priceText || priceText.trim().length === 0) {
         ErrorHandler.dom('Extracted price text is empty');
         return;
       }
-      
+
       const existingElements = parent.querySelectorAll('[data-vat-price="' + price + '"]');
       for (let elem of existingElements) {
         if (elem.textContent.trim() === priceText.trim()) {
@@ -528,37 +774,37 @@ class VATCalculator {
           return;
         }
       }
-      
+
       try {
         const range = document.createRange();
         range.setStart(textNode, startIndex);
         range.setEnd(textNode, startIndex + length);
-        
+
         const span = document.createElement('span');
         span.className = this.enabled ? 'vat-price-element vat-enabled' : 'vat-price-element vat-disabled';
         span.dataset.price = price;
         span.dataset.originalText = priceText;
-        
+
         range.surroundContents(span);
-        
+
         this.addHoverEvents(span);
         this.priceElements.push(span);
-        
+
       } catch (rangeError) {
         ErrorHandler.dom('Range API failed, using fallback', rangeError);
-        
+
         if (!parent.dataset.vatProcessed) {
           parent.dataset.vatProcessed = 'true';
           parent.dataset.vatPrice = price;
           parent.dataset.vatOriginalText = priceText;
           parent.classList.add('vat-price-container');
           parent.classList.add(this.enabled ? 'vat-enabled' : 'vat-disabled');
-          
+
           this.addHoverEvents(parent);
           this.priceElements.push(parent);
         }
       }
-      
+
     } catch (error) {
       ErrorHandler.runtime('Error in createPriceElement', error);
       return;
@@ -572,8 +818,11 @@ class VATCalculator {
       }
     };
     
-    const mouseLeaveHandler = () => {
-      this.hideTooltip();
+    const mouseLeaveHandler = (e) => {
+      const container = e.target.closest && e.target.closest('.vat-price-container');
+      if (!container || !e.relatedTarget || !container.contains(e.relatedTarget)) {
+        this.hideTooltip();
+      }
     };
     
     const mouseMoveHandler = (e) => {
@@ -586,15 +835,21 @@ class VATCalculator {
     element._vatMouseLeave = mouseLeaveHandler;
     element._vatMouseMove = mouseMoveHandler;
     
-    element.addEventListener('mouseenter', mouseEnterHandler);
-    element.addEventListener('mouseleave', mouseLeaveHandler);
-    element.addEventListener('mousemove', mouseMoveHandler);
+    const useCapture = true;
+    element.addEventListener('mouseenter', mouseEnterHandler, useCapture);
+    element.addEventListener('mouseleave', mouseLeaveHandler, useCapture);
+    element.addEventListener('mousemove', mouseMoveHandler, useCapture);
   }
 
   showTooltip(element, event) {
-    const price = parseFloat(element.dataset.price);
+    const container = element.closest && element.closest('.vat-price-container') ? element.closest('.vat-price-container') : element;
+    if (!container || !container.dataset || container.dataset.price === undefined) return;
+    this.hideTooltip();
+    const price = parseFloat(container.dataset.price);
+    if (isNaN(price)) return;
     const priceWithoutVAT = this.calculatePriceWithoutVAT(price);
-    const currency = this.getCurrencySymbol(element.dataset.originalText);
+    const vatAmount = Math.round((price - priceWithoutVAT) * 100) / 100;
+    const currency = this.getCurrencySymbol(container.dataset.originalText);
     
     this.tooltip = document.createElement('div');
     this.tooltip.className = 'vat-tooltip';
@@ -615,8 +870,7 @@ class VATCalculator {
     if (this.showVATBreakdown) {
       const vatDiv = document.createElement('div');
       vatDiv.className = 'vat-tooltip-vat';
-      const vatAmount = (price - priceWithoutVAT).toFixed(2);
-      vatDiv.textContent = `VAT ${this.vatRate}%: ${vatAmount} ${currency}`;
+      vatDiv.textContent = `VAT ${this.vatRate}%: ${vatAmount.toFixed(2)} ${currency}`;
       content.appendChild(vatDiv);
     }
     
@@ -626,12 +880,13 @@ class VATCalculator {
   }
 
   hideTooltip() {
-    if (this.tooltip) {
-      this.tooltip.classList.add('vat-hiding');
+    const toRemove = this.tooltip;
+    this.tooltip = null;
+    if (toRemove) {
+      toRemove.classList.add('vat-hiding');
       setTimeout(() => {
-        if (this.tooltip) {
-          this.tooltip.remove();
-          this.tooltip = null;
+        if (toRemove.parentNode) {
+          toRemove.remove();
         }
       }, 150);
     }
@@ -664,7 +919,8 @@ class VATCalculator {
   }
 
   calculatePriceWithoutVAT(priceWithVAT) {
-    return priceWithVAT / (1 + this.vatRate / 100);
+    const net = priceWithVAT / (1 + this.vatRate / 100);
+    return Math.round(net * 100) / 100;
   }
 
   getCurrencySymbol(originalText) {
@@ -688,7 +944,21 @@ class VATCalculator {
     if (originalText.includes('lei') || originalText.includes('RON')) return 'lei';
     if (originalText.includes('лв') || originalText.includes('BGN')) return 'лв';
     if (originalText.includes('kn') || originalText.includes('HRK')) return '€';
-    
+    if (originalText.includes('¥') || originalText.includes('CNY') || originalText.includes('JPY')) return '¥';
+    if (originalText.includes('₹') || originalText.includes('INR')) return '₹';
+    if (originalText.includes('R$') || originalText.includes('BRL')) return 'R$';
+    if (originalText.includes('₽') || originalText.includes('RUB')) return '₽';
+    if (originalText.includes('₺') || originalText.includes('TRY')) return '₺';
+    if (originalText.includes('₩') || originalText.includes('KRW')) return '₩';
+    if (originalText.includes('฿') || originalText.includes('THB')) return '฿';
+    if (originalText.includes('₫') || originalText.includes('VND')) return '₫';
+    if (originalText.includes('₱') || originalText.includes('PHP')) return '₱';
+    if (originalText.includes('Rp') || originalText.includes('IDR')) return 'Rp';
+    if (originalText.includes('₪') || originalText.includes('ILS')) return '₪';
+    if (originalText.includes('CHF')) return 'CHF';
+    if (originalText.includes('₵') || originalText.includes('GHS')) return '₵';
+    if (originalText.includes('₦') || originalText.includes('NGN')) return '₦';
+    if (originalText.includes('R') && (originalText.includes('ZAR') || /(?:\s|^)R(?:\s|$)/.test(originalText))) return 'R';
     return this.getCurrencyByCountryCode(this.countryCode);
   }
 
@@ -795,6 +1065,15 @@ class VATCalculator {
       }
     });
 
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        clearTimeout(this._visibilityRescanTimeout);
+        this._visibilityRescanTimeout = setTimeout(() => {
+          try { this.scanForPrices(); this.updatePriceElements(); } catch (e) { ErrorHandler.runtime('Visibility rescan failed', e); }
+        }, 400);
+      }
+    });
+
     try {
       this.mutationObserver.observe(document.body, {
         childList: true,
@@ -815,7 +1094,18 @@ class VATCalculator {
       clearTimeout(this.rescanTimeout);
       this.rescanTimeout = null;
     }
-    
+    if (this.initialRescanTimeout) {
+      clearTimeout(this.initialRescanTimeout);
+      this.initialRescanTimeout = null;
+    }
+    if (this._visibilityRescanTimeout) {
+      clearTimeout(this._visibilityRescanTimeout);
+      this._visibilityRescanTimeout = null;
+    }
+    if (this._lateRescanTimeout) {
+      clearTimeout(this._lateRescanTimeout);
+      this._lateRescanTimeout = null;
+    }
     this.hideTooltip();
     
     this.priceElements.forEach(element => {
@@ -824,19 +1114,27 @@ class VATCalculator {
     
     this.priceElements = [];
   }
+};
 }
 
-if (window.__vatOffInjected) {
-  return;
-}
-window.__vatOffInjected = true;
-
-if (!isExtensionPage()) {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      new VATCalculator();
-    });
-  } else {
-    new VATCalculator();
+if (window.__vatOffDocument !== document) {
+  window.__vatOffDocument = document;
+  if (!isExtensionPage()) {
+    function initVATCalculator() {
+      if (!document.body) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initVATCalculator, { once: true });
+        } else {
+          setTimeout(initVATCalculator, 10);
+        }
+        return;
+      }
+      new window.VATCalculator();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initVATCalculator, { once: true });
+    } else {
+      initVATCalculator();
+    }
   }
 }

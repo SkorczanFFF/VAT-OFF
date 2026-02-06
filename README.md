@@ -2,6 +2,28 @@
 
 A powerful Chrome extension that automatically detects prices on web pages and displays prices excluding VAT when you hover over them. Perfect for businesses, accountants, and anyone who needs to quickly see net prices. Supports 100+ countries across 7 continents with automatic region detection, custom VAT rates, and real-time price detection.
 
+<div align="center">
+  <a href="https://chromewebstore.google.com/detail/vat-off/lplomppbbkgehcldiilhckbdalnblhdl"><img src="icons/icon128.png" alt="VAT-OFF" width="128" height="128" /></a>
+  <br />
+  **[Download from Chrome Web Store](https://chromewebstore.google.com/detail/vat-off/lplomppbbkgehcldiilhckbdalnblhdl)**
+</div>
+
+## Changelog
+
+### 1.0.1
+
+**Updated**
+- Bulgaria: currency updated from Bulgarian lev (лв) to Euro (€) as of 1st January 2026.
+- Extension icons updated for better visibility on white backgrounds.
+- Added official Chrome Web Store link in README and installation section.
+
+**Fixed**
+- Price detection for amounts split across multiple DOM nodes and for values without thousands separators; tooltip now displays the correct full amount on affected sites.
+
+**Changed**
+- When the extension is disabled, the content script no longer runs and the page DOM is left unchanged.
+- Popup now displays a message on pages where the extension cannot run (e.g. browser internal pages, extension pages).
+
 ## 📸 Screenshots
 
 ### Extension Popup
@@ -29,7 +51,7 @@ The comprehensive settings page allows you to configure all extension options, s
   - European format: `599,99 zł`, `768.00 €`
   - US format: `$1,234.56`
   - UK format: `£99.99`
-  - Plain numbers: `1234.56`, `12 000`
+  - Plain numbers and space-separated thousands: `1234.56`, `12 000`, `4 749,00`
 - **False Positive Filtering**: Intelligently filters out phone numbers, dates, version numbers, and other non-price numbers
 
 #### **Region Detection via System Language**
@@ -104,7 +126,7 @@ The comprehensive settings page allows you to configure all extension options, s
 
 ### From Chrome Web Store
 
-1. Visit the Chrome Web Store listing for VAT-OFF
+1. **[Download VAT-OFF from the Chrome Web Store](https://chromewebstore.google.com/detail/vat-off/lplomppbbkgehcldiilhckbdalnblhdl)**
 2. Click "Add to Chrome"
 3. Confirm installation
 4. The extension icon will appear in your browser toolbar
@@ -303,7 +325,7 @@ VAT-OFF/
 ## 🌍 Supported Countries
 
 ### European Union (27 countries)
-Austria (20% €), Belgium (21% €), Bulgaria (20% лв), Croatia (25% €), Cyprus (19% €), Czech Republic (21% Kč), Denmark (25% kr), Estonia (24% €), Finland (25.5% €), France (20% €), Germany (19% €), Greece (24% €), Hungary (27% Ft), Ireland (23% €), Italy (22% €), Latvia (21% €), Lithuania (21% €), Luxembourg (17% €), Malta (18% €), Netherlands (21% €), Poland (23% zł), Portugal (23% €), Romania (19% lei), Slovakia (20% €), Slovenia (22% €), Spain (21% €), Sweden (25% kr)
+Austria (20% €), Belgium (21% €), Bulgaria (20% €), Croatia (25% €), Cyprus (19% €), Czech Republic (21% Kč), Denmark (25% kr), Estonia (24% €), Finland (25.5% €), France (20% €), Germany (19% €), Greece (24% €), Hungary (27% Ft), Ireland (23% €), Italy (22% €), Latvia (21% €), Lithuania (21% €), Luxembourg (17% €), Malta (18% €), Netherlands (21% €), Poland (23% zł), Portugal (23% €), Romania (19% lei), Slovakia (20% €), Slovenia (22% €), Spain (21% €), Sweden (25% kr)
 
 ### Other Europe (16 countries)
 Albania (20% ALL), Andorra (4.5% €), Belarus (20% Br), Bosnia & Herzegovina (17% BAM), Iceland (24% kr), Liechtenstein (8.1% CHF), Moldova (20% MDL), Monaco (20% €), Montenegro (21% €), North Macedonia (18% MKD), Norway (25% kr), Russia (22% ₽), Serbia (20% RSD), Switzerland (8.1% CHF), Turkey (20% ₺), Ukraine (20% ₴), United Kingdom (20% £)

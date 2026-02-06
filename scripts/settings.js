@@ -297,12 +297,15 @@ const SettingsManager = {
       return { net: 0, gross: 0, vat: 0 };
     }
     
+    const round2 = (n) => Math.round(n * 100) / 100;
     if (fromGross) {
-      const net = amount / (1 + vatRate / 100);
-      return { net, gross: amount, vat: amount - net };
+      const net = round2(amount / (1 + vatRate / 100));
+      const vat = round2(amount - net);
+      return { net, gross: amount, vat };
     } else {
-      const gross = amount * (1 + vatRate / 100);
-      return { net: amount, gross, vat: gross - amount };
+      const gross = round2(amount * (1 + vatRate / 100));
+      const vat = round2(gross - amount);
+      return { net: amount, gross, vat };
     }
   }
 };

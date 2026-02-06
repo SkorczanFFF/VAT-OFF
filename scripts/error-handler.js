@@ -1,4 +1,5 @@
-const ErrorHandler = {
+if (typeof window.ErrorHandler === 'undefined') {
+window.ErrorHandler = {
   Severity: {
     DEBUG: 'debug',
     INFO: 'info',
@@ -96,3 +97,4 @@ const ErrorHandler = {
     ErrorHandler.log(ErrorHandler.Severity.CRITICAL, ErrorHandler.ErrorType.RUNTIME, message, details);
   }
 };
+}
