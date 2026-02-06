@@ -2,11 +2,19 @@
 
 A powerful Chrome extension that automatically detects prices on web pages and displays prices excluding VAT when you hover over them. Perfect for businesses, accountants, and anyone who needs to quickly see net prices. Supports 100+ countries across 7 continents with automatic region detection, custom VAT rates, and real-time price detection.
 
+<br />
+<br />
 <div align="center">
   <a href="https://chromewebstore.google.com/detail/vat-off/lplomppbbkgehcldiilhckbdalnblhdl"><img src="icons/icon128.png" alt="VAT-OFF" width="128" height="128" /></a>
   <br />
-  **[Download from Chrome Web Store](https://chromewebstore.google.com/detail/vat-off/lplomppbbkgehcldiilhckbdalnblhdl)**
 </div>
+<br />
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/vat-off/lplomppbbkgehcldiilhckbdalnblhdl">
+    <strong>Download VAT-OFF from the Chrome Web Store</strong>
+  </a>
+</p>
+<br />
 
 ## Changelog
 
